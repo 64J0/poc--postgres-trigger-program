@@ -1,0 +1,25 @@
+#+TITLE: [POC] Postgres trigger program
+#+DATE: [2024-12-26 qui]
+
+The idea it to create an HTTP Rest API to interact with the user.
+
+This user will be able to POST requests scheduling the execution of
+programs. This will be mapped into a database (PostgreSQL) table so we keep the
+history of those operations.
+
+Other than this, the user will be able to:
+
+- Register new scripts;
+- List scripts that are already registered.
+
+Then, whenever this execution table is updated it will notify a second
+application, running a MailboxProcessor that will be responsible for running
+these scripts and collecting their output (both success and failure).
+
+Some useful links:
+
+- https://www.postgresql.org/docs/current/sql-notify.html
+- https://www.npgsql.org/doc/wait.html
+- https://tedeh.net/publishing-rabbitmq-messages-from-postgresql/
+- https://thesharperdev.com/fsharps-mailboxprocessor/
+- https://en.wikibooks.org/wiki/F_Sharp_Programming/MailboxProcessor
