@@ -1,0 +1,24 @@
+name: poc
+
+services:
+  postgres:
+    container_name: postgres_container
+    image: postgres:17
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      PGDATA: /data/postgres
+    volumes:
+      - ./database/ddl.sql:/docker-entrypoint-initdb.d/ddl.sql
+    ports:
+      - "5437:5432"
+    networks:
+      - postgres
+    restart: unless-stopped
+
+  # TODO api
+  # TODO manager
+
+networks:
+  postgres:
+    driver: bridge

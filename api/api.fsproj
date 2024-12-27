@@ -6,12 +6,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Programs.Repository.fs" />
-    <Compile Include="ProgramExecutions.Repository.fs" />
+    <Compile Include="Repository/Programs.Repository.fs" />
+    <Compile Include="Repository/ProgramExecutions.Repository.fs" />
+    <Compile Include="Environment.fs" />
     <Compile Include="Main.fs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />
     <PackageReference Include="Giraffe" Version="7.0.2" />
     <PackageReference Include="Npgsql" Version="9.0.2" />
   </ItemGroup>

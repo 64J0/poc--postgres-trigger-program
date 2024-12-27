@@ -23,3 +23,16 @@ create table program_outputs (
     stdout_log text not null,
     stderr_log text not null
 );
+
+-- create or replace function trigger_manager_application(docker_image text)
+-- returns int
+-- language plpgsql
+-- as
+-- $$
+-- declare
+-- $$;
+
+-- create or replace trigger program_trigger 
+-- after insert
+-- on program_executions
+-- execute 
