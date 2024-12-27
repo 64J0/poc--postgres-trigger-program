@@ -1,17 +1,65 @@
 module Api.Repository.Programs
 
+open System
 open Npgsql
 
-let private testConnectionString = "Host=myserver;Username=mylogin;Password=mypass;Database=mydatabase";
+let private testConnectionString =
+    "Host=myserver;Username=mylogin;Password=mypass;Database=mydatabase"
+
 let private dataSource = NpgsqlDataSource.Create(testConnectionString)
 
-let getAll () =
+type ProgramsDto =
+    { Name: string
+      DockerImage: string
+      CreatedAt: DateTime }
+
+let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramsDto list, string>> =
     async {
-        use command = dataSource.CreateCommand("SELECT * FROM programs")
+        use command =
+            dataSource.CreateCommand(
+                """
+        SELECT 
+            p.name, 
+            p.docker_image,
+            p.created_at
+        FROM programs p
+        """
+            )
+
         use! reader = command.ExecuteReaderAsync() |> Async.AwaitTask
 
+        let mutable dbResponse = []
+
         while! (reader.ReadAsync() |> Async.AwaitTask) do
-            printfn "%s" (reader.GetString(0))
+            let name = reader.GetString(0)
+            let dockerImage = reader.GetString(1)
+            let createdAt = reader.GetDateTime(2)
+
+            dbResponse <-
+                { Name = name
+                  DockerImage = dockerImage
+                  CreatedAt = createdAt }
+                :: dbResponse
+
+        return Ok dbResponse
     }
 
-let create () = ()
+let create (dataSource: NpgsqlDataSource) (dto: ProgramsDto) : Async<Result<unit, string>> =
+    async {
+        use command =
+            dataSource.CreateCommand(
+                """
+        INSERT INTO programs
+        (name, docker_image, created_at)
+        VALUES (@p0, @p1, @p2)
+        """
+            )
+
+        command.Parameters.AddWithValue(dto.Name) |> ignore
+        command.Parameters.AddWithValue(dto.DockerImage) |> ignore
+        command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
+
+        let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
+
+        return Ok()
+    }
