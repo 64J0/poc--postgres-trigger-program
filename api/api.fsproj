@@ -6,9 +6,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Repository/Programs.Repository.fs" />
-    <Compile Include="Repository/ProgramExecutions.Repository.fs" />
+    <Compile Include="Types.fs" />
     <Compile Include="Environment.fs" />
+
+    <Compile Include="Repositories/Database.fs" />
+    <Compile Include="Repositories/Programs.fs" />
+    <Compile Include="Repositories/ProgramExecutions.fs" />
+
+    <Compile Include="Handlers/Programs.fs" />
+    <Compile Include="Handlers/ProgramExecutions.fs" />
+    
     <Compile Include="Main.fs" />
   </ItemGroup>
 

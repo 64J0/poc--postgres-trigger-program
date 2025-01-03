@@ -1,22 +1,10 @@
 module Api.Repository.ProgramExecutions
 
-open System
 open Npgsql
 
-let private testConnectionString =
-    "Host=myserver;Username=mylogin;Password=mypass;Database=mydatabase"
+open Api.Types
 
-let private dataSource = NpgsqlDataSource.Create(testConnectionString)
-
-type ProgramExecutionsDto =
-    { Name: string
-      DockerImage: string
-      ProgramInput: string
-      PullSuccess: bool
-      StdOutLog: string
-      StdErrLog: string }
-
-let getAll () : Async<Result<ProgramExecutionsDto list, string>> =
+let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramExecutionsDto list, string>> =
     async {
         use command =
             dataSource.CreateCommand(

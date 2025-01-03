@@ -12,7 +12,7 @@ let endpoints =
                   route "/executions" (text "TODO list executions") ]
 
             POST
-                [ route "/program" (text "TODO register new program")
+                [ route "/program" (Api.Handlers.Programs.createProgram ())
                   route "/execute" (text "TODO create new execution entry") ] ] ]
 
 let notFoundHandler = "Not Found" |> text |> RequestErrors.notFound
@@ -21,7 +21,11 @@ let configureApp (appBuilder: IApplicationBuilder) =
     appBuilder.UseRouting().UseGiraffe(endpoints).UseGiraffe(notFoundHandler)
 
 let configureServices (services: IServiceCollection) =
-    services.AddRouting().AddGiraffe() |> ignore
+    services
+        .AddSingleton<Api.Types.IDatasource>(Api.Database.getDatasource ())
+        .AddRouting()
+        .AddGiraffe()
+    |> ignore
 
 [<EntryPoint>]
 let main args =
