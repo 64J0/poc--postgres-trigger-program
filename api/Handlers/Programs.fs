@@ -15,8 +15,8 @@ let createProgram () : HttpHandler =
 
         use _ = logger.BeginScope("CreateProgram")
 
-        try
-            task {
+        task {
+            try
                 let body = ctx.Request.Body
                 let! serializedBody = serializer.DeserializeAsync<ProgramsDto> body
                 logger.LogDebug "Body serialization complete"
@@ -32,11 +32,12 @@ let createProgram () : HttpHandler =
                     logger.LogError $"Database insertion failed with error {err}"
                     ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
                     return! json {| Message = "New program was not inserted!" |} next ctx
-            }
-        with exn ->
-            logger.LogCritical $"Something wrong happened. Exception information: {exn}"
-            ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
-            json {| Message = "Something wrong happened" |} next ctx
+
+            with exn ->
+                logger.LogCritical $"Something wrong happened. Exception information: {exn}"
+                ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
+                return! json {| Message = "Something wrong happened" |} next ctx
+        }
 
 let getPrograms () : HttpHandler =
     fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -45,8 +46,8 @@ let getPrograms () : HttpHandler =
 
         use _ = logger.BeginScope("GetPrograms")
 
-        try
-            task {
+        task {
+            try
                 let! dbPrograms = Api.Repository.Programs.getAll datasource
 
                 match dbPrograms with
@@ -64,8 +65,8 @@ let getPrograms () : HttpHandler =
                     logger.LogError $"Database read failed with error {err}"
                     ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
                     return! json {| Message = "Failed when trying to retrieve programs!" |} next ctx
-            }
-        with exn ->
-            logger.LogCritical $"Something wrong happened. Exception information: {exn}"
-            ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
-            json {| Message = "Something wrong happened" |} next ctx
+            with exn ->
+                logger.LogCritical $"Something wrong happened. Exception information: {exn}"
+                ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
+                return! json {| Message = "Something wrong happened" |} next ctx
+        }

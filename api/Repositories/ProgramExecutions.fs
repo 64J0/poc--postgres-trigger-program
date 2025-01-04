@@ -48,21 +48,24 @@ let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramExecutionsDtoOut
         return Ok dbResponse
     }
 
-// let create (dataSource: NpgsqlDataSource) (dto: ProgramExecutionsDtoInput) : Async<Result<unit, string>> =
-//     async {
-//         let command =
-//             dataSource.CreateCommand(
-//                 """
-//         INSERT INTO program_executions
-//         SELECT p.id, $2, $3 FROM programs p WHERE p.name = $1
-//         """
-//             )
+let create (dataSource: NpgsqlDataSource) (dto: ProgramExecutionsDtoInput) : Async<Result<unit, string>> =
+    async {
+        let command =
+            dataSource.CreateCommand(
+                """
+        INSERT INTO program_executions
+        (program_id, program_input, created_at)
+        SELECT p.id, $2, $3 
+        FROM programs p 
+        WHERE p.name = $1;
+        """
+            )
 
-//         command.Parameters.AddWithValue(dto.Name) |> ignore
-//         command.Parameters.AddWithValue(dto.ProgramInput) |> ignore
-//         command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
+        command.Parameters.AddWithValue(dto.Name) |> ignore
+        command.Parameters.AddWithValue(dto.ProgramInput) |> ignore
+        command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
 
-//         let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
+        let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
 
-//         return Ok()
-//     }
+        return Ok()
+    }

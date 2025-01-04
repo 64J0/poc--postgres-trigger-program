@@ -4,7 +4,7 @@ drop table if exists programs;
 
 create table programs (
     id serial primary key,
-    name text not null,
+    name text not null unique,
     docker_image text not null unique,
     created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );
