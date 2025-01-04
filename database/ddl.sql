@@ -11,14 +11,14 @@ create table programs (
 
 create table program_executions (
     id serial primary key,
-    program_id references programs(id) not null,
+    program_id serial references programs(id) not null,
     program_input text not null,
     created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );
 
 create table program_outputs (
     id serial primary key,
-    execution_id references program_executions(id) not null,
+    execution_id serial references program_executions(id) not null,
     pull_success bool default null,
     stdout_log text not null,
     stderr_log text not null

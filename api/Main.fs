@@ -8,7 +8,7 @@ let endpoints =
     [ subRoute
           "/api"
           [ GET
-                [ route "/programs" (text "TODO list programs")
+                [ route "/programs" (Api.Handlers.Programs.getPrograms ())
                   route "/executions" (text "TODO list executions") ]
 
             POST

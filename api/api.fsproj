@@ -8,8 +8,8 @@
   <ItemGroup>
     <Compile Include="Types.fs" />
     <Compile Include="Environment.fs" />
+    <Compile Include="Database.fs" />
 
-    <Compile Include="Repositories/Database.fs" />
     <Compile Include="Repositories/Programs.fs" />
     <Compile Include="Repositories/ProgramExecutions.fs" />
 

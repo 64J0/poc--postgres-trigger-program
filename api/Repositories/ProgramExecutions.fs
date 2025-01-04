@@ -4,7 +4,7 @@ open Npgsql
 
 open Api.Types
 
-let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramExecutionsDto list, string>> =
+let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramExecutionsDtoOutput list, string>> =
     async {
         use command =
             dataSource.CreateCommand(
@@ -48,4 +48,21 @@ let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramExecutionsDto li
         return Ok dbResponse
     }
 
-let create () = ()
+// let create (dataSource: NpgsqlDataSource) (dto: ProgramExecutionsDtoInput) : Async<Result<unit, string>> =
+//     async {
+//         let command =
+//             dataSource.CreateCommand(
+//                 """
+//         INSERT INTO program_executions
+//         SELECT p.id, $2, $3 FROM programs p WHERE p.name = $1
+//         """
+//             )
+
+//         command.Parameters.AddWithValue(dto.Name) |> ignore
+//         command.Parameters.AddWithValue(dto.ProgramInput) |> ignore
+//         command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
+
+//         let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
+
+//         return Ok()
+//     }

@@ -13,7 +13,7 @@ let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramsDto list, strin
             p.name, 
             p.docker_image,
             p.created_at
-        FROM programs p
+        FROM programs p;
         """
             )
 
@@ -42,7 +42,7 @@ let create (dataSource: NpgsqlDataSource) (dto: ProgramsDto) : Async<Result<unit
                 """
         INSERT INTO programs
         (name, docker_image, created_at)
-        VALUES (@p0, @p1, @p2)
+        VALUES ($1, $2, $3);
         """
             )
 

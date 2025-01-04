@@ -9,7 +9,12 @@ type ProgramsDto =
       DockerImage: string
       CreatedAt: DateTime }
 
-type ProgramExecutionsDto =
+type ProgramExecutionsDtoInput =
+    { Name: string
+      ProgramInput: string
+      CreatedAt: DateTime }
+
+type ProgramExecutionsDtoOutput =
     { Name: string
       DockerImage: string
       ProgramInput: string
