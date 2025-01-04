@@ -24,15 +24,16 @@ create table program_outputs (
     stderr_log text not null
 );
 
--- create or replace function trigger_manager_application(docker_image text)
--- returns int
--- language plpgsql
--- as
--- $$
--- declare
--- $$;
+create or replace function trigger_manager_application()
+returns trigger as
+$$
+begin
+    SELECT pg_notify('program_manager_channel', NEW.id::text);
 
--- create or replace trigger program_trigger 
--- after insert
--- on program_executions
--- execute 
+    return NULL;
+end;
+$$ language plpgsql;
+
+create or replace trigger program_trigger_for_manager_svc
+after insert on program_executions
+execute function trigger_manager_application();
