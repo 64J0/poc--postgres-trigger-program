@@ -9,11 +9,11 @@ let endpoints =
           "/api"
           [ GET
                 [ route "/programs" (Api.Handlers.Programs.getPrograms ())
-                  route "/executions" (text "TODO list executions") ]
+                  route "/executions" (Api.Handlers.ProgramExecutions.getProgramExecutions ()) ]
 
             POST
                 [ route "/program" (Api.Handlers.Programs.createProgram ())
-                  route "/execute" (text "TODO create new execution entry") ] ] ]
+                  route "/execute" (Api.Handlers.ProgramExecutions.createProgramExecution ()) ] ] ]
 
 let notFoundHandler = "Not Found" |> text |> RequestErrors.notFound
 
