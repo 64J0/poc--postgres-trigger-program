@@ -27,11 +27,11 @@ let createProgramExecution () : HttpHandler =
                 | Ok() ->
                     logger.LogDebug "Database insertion complete"
                     ctx.SetStatusCode(int HttpStatusCode.Created)
-                    return! json {| Message = "New program inserted!" |} next ctx
+                    return! json {| Message = "New execution inserted!" |} next ctx
                 | Error err ->
                     logger.LogError $"Database insertion failed with error {err}"
                     ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
-                    return! json {| Message = "New program was not inserted!" |} next ctx
+                    return! json {| Message = "New execution was not inserted!" |} next ctx
 
             with exn ->
                 logger.LogCritical $"Something wrong happened. Exception information: {exn}"
@@ -58,7 +58,7 @@ let getProgramExecutions () : HttpHandler =
                     return!
                         json
                             {| Message = "Read success!"
-                               Programs = p |}
+                               ProgramExecutions = p |}
                             next
                             ctx
                 | Error err ->

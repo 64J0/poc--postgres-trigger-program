@@ -23,3 +23,23 @@ Some useful links:
 - https://tedeh.net/publishing-rabbitmq-messages-from-postgresql/
 - https://thesharperdev.com/fsharps-mailboxprocessor/
 - https://en.wikibooks.org/wiki/F_Sharp_Programming/MailboxProcessor
+
+** Examples
+
+#+BEGIN_SRC bash :tangle no
+curl \
+  -d '{"name":"placeholder_001", "dockerImage":"poc_api_2:latest", "createdAt":"2024-01-01"}' \
+  -H "Content-Type: application/json" \
+  -X POST \
+  http://localhost:5000/api/program
+
+curl http://localhost:5000/api/programs
+
+curl \
+  -d '{"name":"placeholder_001", "programInput":"1 2 3", "createdAt":"2024-01-02"}' \
+  -H "Content-Type: application/json" \
+  -X POST \
+  http://localhost:5000/api/execute
+
+curl http://localhost:5000/api/executions
+#+END_SRC

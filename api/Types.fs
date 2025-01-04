@@ -18,6 +18,6 @@ type ProgramExecutionsDtoOutput =
     { Name: string
       DockerImage: string
       ProgramInput: string
-      PullSuccess: bool
-      StdOutLog: string
-      StdErrLog: string }
+      PullSuccess: Option<bool>
+      StdOutLog: Option<string>
+      StdErrLog: Option<string> }

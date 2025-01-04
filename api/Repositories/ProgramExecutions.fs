@@ -19,8 +19,8 @@ let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramExecutionsDtoOut
         FROM programs p
         JOIN program_executions pe
         ON pe.program_id = p.id
-        JOIN program_outputs po
-        ON po.execution_id = pe.id
+        LEFT JOIN program_outputs po
+        ON po.execution_id = pe.id;
         """
             )
 
@@ -32,9 +32,9 @@ let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramExecutionsDtoOut
             let name = reader.GetString(0)
             let dockerImage = reader.GetString(1)
             let programInput = reader.GetString(2)
-            let pullSuccess = reader.GetBoolean(3)
-            let stdOutLog = reader.GetString(4)
-            let stdErrLog = reader.GetString(5)
+            let pullSuccess = Api.Database.tryGetValue<bool> (reader.GetBoolean) 3
+            let stdOutLog = Api.Database.tryGetValue<string> (reader.GetString) 4
+            let stdErrLog = Api.Database.tryGetValue<string> (reader.GetString) 5
 
             dbResponse <-
                 { Name = name
