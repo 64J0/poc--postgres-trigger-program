@@ -9,9 +9,12 @@ open Api.Types
 
 let createProgramExecution () : HttpHandler =
     fun (next: HttpFunc) (ctx: HttpContext) ->
-        let logger: ILogger = ctx.GetLogger()
-        let serializer: Json.ISerializer = ctx.GetJsonSerializer()
-        let datasource: Npgsql.NpgsqlDataSource = ctx.GetService<Api.Types.IDatasource>()
+        let logger = ctx.GetLogger()
+        let serializer = ctx.GetJsonSerializer()
+        let datasource = ctx.GetService<Api.Types.IDatasource>()
+
+        let programExecutionsRepository =
+            ctx.GetService<Api.Repository.IProgramExecutions.IProgramExecutions>()
 
         use _ = logger.BeginScope("CreateProgramExecution")
 
@@ -21,7 +24,7 @@ let createProgramExecution () : HttpHandler =
                 let! serializedBody = serializer.DeserializeAsync<ProgramExecutionsDtoInput> body
                 logger.LogDebug "Body serialization complete"
 
-                let! dbCreationResult = Api.Repository.ProgramExecutions.create datasource serializedBody
+                let! dbCreationResult = programExecutionsRepository.create datasource serializedBody
 
                 match dbCreationResult with
                 | Ok() ->
@@ -41,14 +44,17 @@ let createProgramExecution () : HttpHandler =
 
 let getProgramExecutions () : HttpHandler =
     fun (next: HttpFunc) (ctx: HttpContext) ->
-        let logger: ILogger = ctx.GetLogger()
-        let datasource: Npgsql.NpgsqlDataSource = ctx.GetService<Api.Types.IDatasource>()
+        let logger = ctx.GetLogger()
+        let datasource = ctx.GetService<Api.Types.IDatasource>()
+
+        let programExecutionsRepository =
+            ctx.GetService<Api.Repository.IProgramExecutions.IProgramExecutions>()
 
         use _ = logger.BeginScope("GetProgramExecutions")
 
         task {
             try
-                let! dbPrograms = Api.Repository.ProgramExecutions.getAll datasource
+                let! dbPrograms = programExecutionsRepository.read datasource
 
                 match dbPrograms with
                 | Ok p ->

@@ -9,9 +9,10 @@ open Api.Types
 
 let createProgram () : HttpHandler =
     fun (next: HttpFunc) (ctx: HttpContext) ->
-        let logger: ILogger = ctx.GetLogger()
-        let serializer: Json.ISerializer = ctx.GetJsonSerializer()
-        let datasource: Npgsql.NpgsqlDataSource = ctx.GetService<Api.Types.IDatasource>()
+        let logger = ctx.GetLogger()
+        let serializer = ctx.GetJsonSerializer()
+        let datasource = ctx.GetService<Api.Types.IDatasource>()
+        let programsRepository = ctx.GetService<Api.Repository.IPrograms.IPrograms>()
 
         use _ = logger.BeginScope("CreateProgram")
 
@@ -21,7 +22,7 @@ let createProgram () : HttpHandler =
                 let! serializedBody = serializer.DeserializeAsync<ProgramsDto> body
                 logger.LogDebug "Body serialization complete"
 
-                let! dbCreationResult = Api.Repository.Programs.create datasource serializedBody
+                let! dbCreationResult = programsRepository.create datasource serializedBody
 
                 match dbCreationResult with
                 | Ok() ->
@@ -41,14 +42,15 @@ let createProgram () : HttpHandler =
 
 let getPrograms () : HttpHandler =
     fun (next: HttpFunc) (ctx: HttpContext) ->
-        let logger: ILogger = ctx.GetLogger()
-        let datasource: Npgsql.NpgsqlDataSource = ctx.GetService<Api.Types.IDatasource>()
+        let logger = ctx.GetLogger()
+        let datasource = ctx.GetService<Api.Types.IDatasource>()
+        let programsRepository = ctx.GetService<Api.Repository.IPrograms.IPrograms>()
 
         use _ = logger.BeginScope("GetPrograms")
 
         task {
             try
-                let! dbPrograms = Api.Repository.Programs.getAll datasource
+                let! dbPrograms = programsRepository.read datasource
 
                 match dbPrograms with
                 | Ok p ->

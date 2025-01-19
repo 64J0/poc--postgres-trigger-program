@@ -2,55 +2,58 @@ module Api.Repository.Programs
 
 open Npgsql
 
+open Api.Repository.IPrograms
 open Api.Types
 
-let getAll (dataSource: NpgsqlDataSource) : Async<Result<ProgramsDto list, string>> =
-    async {
-        use command =
-            dataSource.CreateCommand(
-                """
-        SELECT 
-            p.name, 
-            p.docker_image,
-            p.created_at
-        FROM programs p;
-        """
-            )
+type ProgramsRepository() =
+    interface IPrograms with
+        member this.create (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
+            async {
+                use command =
+                    dataSource.CreateCommand(
+                        """
+                        INSERT INTO programs
+                        (name, docker_image, created_at)
+                        VALUES ($1, $2, $3);
+                        """
+                    )
 
-        use! reader = command.ExecuteReaderAsync() |> Async.AwaitTask
+                command.Parameters.AddWithValue(dto.Name) |> ignore
+                command.Parameters.AddWithValue(dto.DockerImage) |> ignore
+                command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
 
-        let mutable dbResponse = []
+                let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
 
-        while! (reader.ReadAsync() |> Async.AwaitTask) do
-            let name = reader.GetString(0)
-            let dockerImage = reader.GetString(1)
-            let createdAt = reader.GetDateTime(2)
+                return Ok()
+            }
 
-            dbResponse <-
-                { Name = name
-                  DockerImage = dockerImage
-                  CreatedAt = createdAt }
-                :: dbResponse
+        member this.read(dataSource: NpgsqlDataSource) =
+            async {
+                use command =
+                    dataSource.CreateCommand(
+                        """
+                        SELECT
+                          p.name,
+                          p.docker_image,
+                          p.created_at
+                        FROM programs p;
+                        """
+                    )
 
-        return Ok dbResponse
-    }
+                use! reader = command.ExecuteReaderAsync() |> Async.AwaitTask
 
-let create (dataSource: NpgsqlDataSource) (dto: ProgramsDto) : Async<Result<unit, string>> =
-    async {
-        use command =
-            dataSource.CreateCommand(
-                """
-        INSERT INTO programs
-        (name, docker_image, created_at)
-        VALUES ($1, $2, $3);
-        """
-            )
+                let mutable dbResponse = []
 
-        command.Parameters.AddWithValue(dto.Name) |> ignore
-        command.Parameters.AddWithValue(dto.DockerImage) |> ignore
-        command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
+                while! (reader.ReadAsync() |> Async.AwaitTask) do
+                    let name = reader.GetString(0)
+                    let dockerImage = reader.GetString(1)
+                    let createdAt = reader.GetDateTime(2)
 
-        let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
+                    dbResponse <-
+                        { Name = name
+                          DockerImage = dockerImage
+                          CreatedAt = createdAt }
+                        :: dbResponse
 
-        return Ok()
-    }
+                return Ok dbResponse
+            }

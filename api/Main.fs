@@ -23,6 +23,11 @@ let configureApp (appBuilder: IApplicationBuilder) =
 let configureServices (services: IServiceCollection) =
     services
         .AddSingleton<Api.Types.IDatasource>(Api.Database.getDatasource ())
+        .AddScoped<Api.Repository.IPrograms.IPrograms, Api.Repository.Programs.ProgramsRepository>()
+        .AddScoped<
+            Api.Repository.IProgramExecutions.IProgramExecutions,
+            Api.Repository.ProgramExecutions.ProgramExecutionsRepository
+          >()
         .AddRouting()
         .AddGiraffe()
     |> ignore

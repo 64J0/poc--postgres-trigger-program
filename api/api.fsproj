@@ -10,7 +10,9 @@
     <Compile Include="Environment.fs" />
     <Compile Include="Database.fs" />
 
+    <Compile Include="Repositories/IPrograms.fs" />
     <Compile Include="Repositories/Programs.fs" />
+    <Compile Include="Repositories/IProgramExecutions.fs" />
     <Compile Include="Repositories/ProgramExecutions.fs" />
 
     <Compile Include="Handlers/Programs.fs" />
