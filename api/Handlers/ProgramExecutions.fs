@@ -16,6 +16,8 @@ let createProgramExecution () : HttpHandler =
         let programExecutionsRepository =
             ctx.GetService<Api.Repository.IProgramExecutions.IProgramExecutions>()
 
+        do programExecutionsRepository.DataSource <- Some datasource
+
         use _ = logger.BeginScope("CreateProgramExecution")
 
         task {
@@ -24,7 +26,7 @@ let createProgramExecution () : HttpHandler =
                 let! serializedBody = serializer.DeserializeAsync<ProgramExecutionsDtoInput> body
                 logger.LogDebug "Body serialization complete"
 
-                let! dbCreationResult = programExecutionsRepository.create datasource serializedBody
+                let! dbCreationResult = programExecutionsRepository.create serializedBody
 
                 match dbCreationResult with
                 | Ok() ->
@@ -50,11 +52,13 @@ let getProgramExecutions () : HttpHandler =
         let programExecutionsRepository =
             ctx.GetService<Api.Repository.IProgramExecutions.IProgramExecutions>()
 
+        do programExecutionsRepository.DataSource <- Some datasource
+
         use _ = logger.BeginScope("GetProgramExecutions")
 
         task {
             try
-                let! dbPrograms = programExecutionsRepository.read datasource
+                let! dbPrograms = programExecutionsRepository.read ()
 
                 match dbPrograms with
                 | Ok p ->

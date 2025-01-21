@@ -13,6 +13,7 @@ let createProgram () : HttpHandler =
         let serializer = ctx.GetJsonSerializer()
         let datasource = ctx.GetService<Api.Types.IDatasource>()
         let programsRepository = ctx.GetService<Api.Repository.IPrograms.IPrograms>()
+        do programsRepository.DataSource <- Some datasource
 
         use _ = logger.BeginScope("CreateProgram")
 
@@ -22,7 +23,7 @@ let createProgram () : HttpHandler =
                 let! serializedBody = serializer.DeserializeAsync<ProgramsDto> body
                 logger.LogDebug "Body serialization complete"
 
-                let! dbCreationResult = programsRepository.create datasource serializedBody
+                let! dbCreationResult = programsRepository.create serializedBody
 
                 match dbCreationResult with
                 | Ok() ->
@@ -45,12 +46,13 @@ let getPrograms () : HttpHandler =
         let logger = ctx.GetLogger()
         let datasource = ctx.GetService<Api.Types.IDatasource>()
         let programsRepository = ctx.GetService<Api.Repository.IPrograms.IPrograms>()
+        do programsRepository.DataSource <- Some datasource
 
         use _ = logger.BeginScope("GetPrograms")
 
         task {
             try
-                let! dbPrograms = programsRepository.read datasource
+                let! dbPrograms = programsRepository.read ()
 
                 match dbPrograms with
                 | Ok p ->
