@@ -3,9 +3,8 @@ drop table if exists program_executions;
 drop table if exists programs;
 
 create table programs (
-    id serial primary key,
+    docker_image text primary key,
     name text not null unique,
-    docker_image text not null unique,
     created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );
 

@@ -6,7 +6,7 @@ open Api.Repository.IPrograms
 open Api.Types
 
 type ProgramsRepository() =
-    member private this.dbCreate (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
+    member private _.dbCreate (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
         async {
             use command =
                 dataSource.CreateCommand(
@@ -26,7 +26,7 @@ type ProgramsRepository() =
             return Ok()
         }
 
-    member private this.dbRead(dataSource: NpgsqlDataSource) =
+    member private _.dbRead(dataSource: NpgsqlDataSource) =
         async {
             use command =
                 dataSource.CreateCommand(
@@ -55,6 +55,43 @@ type ProgramsRepository() =
                     :: dbResponse
 
             return Ok dbResponse
+        }
+
+    member private _.dbUpdate (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
+        async {
+            use command =
+                dataSource.CreateCommand(
+                    """
+                    UPDATE programs
+                    SET name = $1
+                    WHERE 
+                    docker_image = $2;
+                    """
+                )
+
+            command.Parameters.AddWithValue(dto.Name) |> ignore
+            command.Parameters.AddWithValue(dto.DockerImage) |> ignore
+
+            let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
+
+            return Ok()
+        }
+
+    member private _.dbDelete (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
+        async {
+            use command =
+                dataSource.CreateCommand(
+                    """
+                    DELETE FROM programs
+                    WHERE docker_image = $1;
+                    """
+                )
+
+            command.Parameters.AddWithValue(dto.DockerImage) |> ignore
+
+            let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
+
+            return Ok()
         }
 
     interface IPrograms with
