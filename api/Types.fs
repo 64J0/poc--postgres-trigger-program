@@ -21,3 +21,5 @@ type ProgramExecutionsDtoOutput =
       PullSuccess: Option<bool>
       StdOutLog: Option<string>
       StdErrLog: Option<string> }
+
+type ApplicationError = Database of string

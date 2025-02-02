@@ -11,10 +11,10 @@ type ProgramsRepository() =
             use command =
                 dataSource.CreateCommand(
                     """
-                        INSERT INTO programs
-                        (name, docker_image, created_at)
-                        VALUES ($1, $2, $3);
-                        """
+                    INSERT INTO programs
+                      (name, docker_image, created_at)
+                    VALUES ($1, $2, $3);
+                    """
                 )
 
             command.Parameters.AddWithValue(dto.Name) |> ignore
@@ -31,12 +31,12 @@ type ProgramsRepository() =
             use command =
                 dataSource.CreateCommand(
                     """
-                        SELECT
-                          p.name,
-                          p.docker_image,
-                          p.created_at
-                        FROM programs p;
-                        """
+                    SELECT
+                      p.name,
+                      p.docker_image,
+                      p.created_at
+                    FROM programs p;
+                    """
                 )
 
             use! reader = command.ExecuteReaderAsync() |> Async.AwaitTask
@@ -63,9 +63,9 @@ type ProgramsRepository() =
         member this.create(dto: ProgramsDto) =
             match (this :> IPrograms).DataSource with
             | Some dataSource -> this.dbCreate (dataSource) (dto)
-            | None -> Error "DataSource object was not set" |> async.Return
+            | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return
 
         member this.read() =
             match (this :> IPrograms).DataSource with
             | Some dataSource -> this.dbRead (dataSource)
-            | None -> Error "DataSource object was not set" |> async.Return
+            | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return

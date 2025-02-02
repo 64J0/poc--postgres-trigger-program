@@ -11,12 +11,12 @@ type ProgramExecutionsRepository() =
             let command =
                 dataSource.CreateCommand(
                     """
-                        INSERT INTO program_executions
-                        (program_id, program_input, created_at)
-                        SELECT p.id, $2, $3 
-                        FROM programs p 
-                        WHERE p.name = $1;
-                        """
+                    INSERT INTO program_executions
+                      (program_id, program_input, created_at)
+                    SELECT p.id, $2, $3 
+                    FROM programs p 
+                    WHERE p.name = $1;
+                    """
                 )
 
             command.Parameters.AddWithValue(dto.Name) |> ignore
@@ -33,19 +33,19 @@ type ProgramExecutionsRepository() =
             use command =
                 dataSource.CreateCommand(
                     """
-                        SELECT 
-                          p.name, 
-                          p.docker_image, 
-                          pe.program_input, 
-                          po.pull_success, 
-                          po.stdout_log, 
-                          po.stderr_log 
-                        FROM programs p
-                        JOIN program_executions pe
-                        ON pe.program_id = p.id
-                        LEFT JOIN program_outputs po
-                        ON po.execution_id = pe.id;
-                        """
+                    SELECT 
+                      p.name, 
+                      p.docker_image, 
+                      pe.program_input, 
+                      po.pull_success, 
+                      po.stdout_log, 
+                      po.stderr_log 
+                    FROM programs p
+                    JOIN program_executions pe
+                    ON pe.program_id = p.id
+                    LEFT JOIN program_outputs po
+                    ON po.execution_id = pe.id;
+                    """
                 )
 
             use! reader = command.ExecuteReaderAsync() |> Async.AwaitTask
@@ -78,9 +78,9 @@ type ProgramExecutionsRepository() =
         member this.create(dto: ProgramExecutionsDtoInput) =
             match (this :> IProgramExecutions).DataSource with
             | Some dataSource -> this.dbCreate (dataSource) (dto)
-            | None -> Error "DataSource object was not set" |> async.Return
+            | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return
 
         member this.read() =
             match (this :> IProgramExecutions).DataSource with
             | Some dataSource -> this.dbRead (dataSource)
-            | None -> Error "DataSource object was not set" |> async.Return
+            | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return
