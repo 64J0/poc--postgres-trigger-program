@@ -1,6 +1,7 @@
 module Api.Database
 
 open Npgsql
+open Microsoft.Extensions.Logging
 
 // Ideas:
 // 1. Move this to a library project that is shared between API/ and Manager/;
@@ -10,9 +11,14 @@ open Npgsql
 let getDatasource () : NpgsqlDataSource =
     match Api.Environment.DB_CONN with
     | Ok conn ->
+        // https://www.npgsql.org/doc/diagnostics/logging.html?tabs=console
+        let loggerFactory =
+            LoggerFactory.Create(fun builder ->
+                builder.AddConsole() |> ignore
+                ())
+
         let dataSourceBuilder = new NpgsqlDataSourceBuilder(conn)
-        let loggerFactory = new Microsoft.Extensions.Logging.LoggerFactory()
-        do dataSourceBuilder.UseLoggerFactory(loggerFactory) |> ignore
+        dataSourceBuilder.UseLoggerFactory(loggerFactory) |> ignore
         dataSourceBuilder.Build()
     | Error err -> failwith err
 
