@@ -27,19 +27,46 @@ Some useful links:
 ** Examples
 
 #+BEGIN_SRC bash :tangle no
-curl \
-  -d '{"name":"placeholder_001", "dockerImage":"poc_api_2:latest", "createdAt":"2024-01-01"}' \
-  -H "Content-Type: application/json" \
-  -X POST \
-  http://localhost:5000/api/program
+  # 1st shell
+  #
+  # start the database container with
+  docker compose up -d postgres
 
-curl http://localhost:5000/api/programs
+  # if you need to restart it use
+  #
+  # docker compose down
+  # docker compose up -d postgres
+  #
+  # check the logs with
+  #
+  # docker container logs -f postgres_container
 
-curl \
-  -d '{"name":"placeholder_001", "programInput":"1 2 3", "createdAt":"2024-01-02"}' \
-  -H "Content-Type: application/json" \
-  -X POST \
-  http://localhost:5000/api/execute
+  # Start the API with
+  dotnet watch --define:DEBUG --project api/
 
-curl http://localhost:5000/api/executions
+  # ===============================================
+  # 2nd shell
+  #
+  # start the manager process
+  dotnet run --define:DEBUG --project manager/
+
+  # ===============================================
+  # 3rd shell
+  #
+  # start playing with the API and check the logs from the manager process
+  curl \
+    -d '{"name":"placeholder_001", "dockerImage":"poc_api_2:latest", "createdAt":"2024-01-01"}' \
+    -H "Content-Type: application/json" \
+    -X POST \
+    http://localhost:5000/api/program
+
+  curl http://localhost:5000/api/programs
+
+  curl \
+    -d '{"name":"placeholder_001", "programInput":"1 2 3", "createdAt":"2024-01-02"}' \
+    -H "Content-Type: application/json" \
+    -X POST \
+    http://localhost:5000/api/execute
+
+  curl http://localhost:5000/api/executions
 #+END_SRC

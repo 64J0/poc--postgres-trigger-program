@@ -10,7 +10,7 @@ create table programs (
 
 create table program_executions (
     id serial primary key,
-    program_id serial references programs(id) not null,
+    program_name text references programs(name) not null,
     program_input text not null,
     created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );
@@ -27,9 +27,11 @@ create or replace function trigger_manager_application()
 returns trigger as
 $$
 begin
-    SELECT pg_notify('program_manager_channel', NEW.id::text);
+    PERFORM(
+        SELECT pg_notify('program_manager_channel', NEW.id::text)
+    );
 
-    return NULL;
+    RETURN null;
 end;
 $$ language plpgsql;
 

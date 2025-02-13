@@ -12,10 +12,8 @@ type ProgramExecutionsRepository() =
                 dataSource.CreateCommand(
                     """
                     INSERT INTO program_executions
-                      (program_id, program_input, created_at)
-                    SELECT p.id, $2, $3 
-                    FROM programs p 
-                    WHERE p.name = $1;
+                      (program_name, program_input, created_at)
+                    VALUES ($1, $2, $3);
                     """
                 )
 
