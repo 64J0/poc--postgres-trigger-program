@@ -7,8 +7,6 @@
 
   <ItemGroup>
     <Compile Include="Types.fs" />
-    <Compile Include="Environment.fs" />
-    <Compile Include="Database.fs" />
 
     <Compile Include="Repositories/IPrograms.fs" />
     <Compile Include="Repositories/Programs.fs" />
@@ -25,6 +23,10 @@
     <PackageReference Include="FsToolkit.ErrorHandling" Version="4.18.0" />
     <PackageReference Include="Giraffe" Version="7.0.2" />
     <PackageReference Include="Npgsql" Version="9.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\database\database.fsproj" />
   </ItemGroup>
 
 </Project>

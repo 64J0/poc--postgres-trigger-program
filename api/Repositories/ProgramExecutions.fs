@@ -56,9 +56,9 @@ type ProgramExecutionsRepository() =
                 let name = reader.GetString(0)
                 let dockerImage = reader.GetString(1)
                 let programInput = reader.GetString(2)
-                let pullSuccess = Api.Database.tryGetValue<bool> (reader.GetBoolean) 3
-                let stdOutLog = Api.Database.tryGetValue<string> (reader.GetString) 4
-                let stdErrLog = Api.Database.tryGetValue<string> (reader.GetString) 5
+                let pullSuccess = Shared.Database.Main.tryGetValue<bool> (reader.GetBoolean) 3
+                let stdOutLog = Shared.Database.Main.tryGetValue<string> (reader.GetString) 4
+                let stdErrLog = Shared.Database.Main.tryGetValue<string> (reader.GetString) 5
 
                 dbResponse <-
                     { Name = name

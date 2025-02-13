@@ -22,7 +22,7 @@ let configureApp (appBuilder: IApplicationBuilder) =
 
 let configureServices (services: IServiceCollection) =
     services
-        .AddSingleton<Api.Types.IDatasource>(Api.Database.getDatasource ())
+        .AddSingleton<Api.Types.IDatasource>(Shared.Database.Main.getDatasource ())
         .AddScoped<Api.Repository.IPrograms.IPrograms, Api.Repository.Programs.ProgramsRepository>()
         .AddScoped<
             Api.Repository.IProgramExecutions.IProgramExecutions,
