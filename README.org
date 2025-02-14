@@ -28,7 +28,7 @@ Something to improve error handling later:
 
 - https://paul.blasuc.ci/posts/fault-report.html
 
-** Examples
+** How to run
 
 #+BEGIN_SRC bash :tangle no
   # 1st shell
