@@ -24,6 +24,10 @@ Some useful links:
 - https://thesharperdev.com/fsharps-mailboxprocessor/
 - https://en.wikibooks.org/wiki/F_Sharp_Programming/MailboxProcessor
 
+Something to improve error handling later:
+
+- https://paul.blasuc.ci/posts/fault-report.html
+
 ** Examples
 
 #+BEGIN_SRC bash :tangle no
@@ -42,7 +46,7 @@ Some useful links:
   # docker container logs -f postgres_container
 
   # Start the API with
-  dotnet watch --define:DEBUG --project api/
+  dotnet run --define:DEBUG --project api/
 
   # ===============================================
   # 2nd shell

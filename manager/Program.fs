@@ -2,6 +2,9 @@
 
 module Main =
 
+    open Npgsql
+    open FsToolkit.ErrorHandling
+
     type Message = ExecuteProgram of ExecutionId: int
 
     type Manager = MailboxProcessor<Message>
@@ -26,9 +29,20 @@ module Main =
 
     [<EntryPoint>]
     let main (_args: string[]) : int =
-        let conn = Shared.Database.Main.getAsyncConnection "program_manager_channel"
+        result {
+            let handler =
+                fun (_sender: obj) (eventArgs: NpgsqlNotificationEventArgs) ->
+                    printfn "Received notification"
+                    printfn "Event args payload: %A" eventArgs.Payload
 
-        while true do
-            conn.Wait()
+            let notificationEventHandler = NotificationEventHandler(handler)
+            let! conn = Shared.Database.Main.getAsyncConnection notificationEventHandler
 
-        0
+            while true do
+                conn.Wait()
+
+            return 0
+        }
+        |> Result.defaultWith (fun err ->
+            eprintfn "Something wrong happened when starting the process. Error: %A" err
+            1)

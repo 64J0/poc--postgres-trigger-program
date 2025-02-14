@@ -3,6 +3,11 @@ open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Giraffe
 open Giraffe.EndpointRouting
+open FsToolkit.ErrorHandling
+
+type ReturnCode() =
+    static member Ok = 0
+    static member Error = 1
 
 let endpoints =
     [ subRoute
@@ -21,25 +26,36 @@ let configureApp (appBuilder: IApplicationBuilder) =
     appBuilder.UseRouting().UseGiraffe(endpoints).UseGiraffe(notFoundHandler)
 
 let configureServices (services: IServiceCollection) =
-    services
-        .AddSingleton<Api.Types.IDatasource>(Shared.Database.Main.getDatasource ())
-        .AddScoped<Api.Repository.IPrograms.IPrograms, Api.Repository.Programs.ProgramsRepository>()
-        .AddScoped<
-            Api.Repository.IProgramExecutions.IProgramExecutions,
-            Api.Repository.ProgramExecutions.ProgramExecutionsRepository
-          >()
-        .AddRouting()
-        .AddGiraffe()
-    |> ignore
+    result {
+        let! dataSource = Shared.Database.Main.getDatasource ()
+
+        services
+            .AddSingleton<Api.Types.IDatasource>(dataSource)
+            .AddScoped<Api.Repository.IPrograms.IPrograms, Api.Repository.Programs.ProgramsRepository>()
+            .AddScoped<
+                Api.Repository.IProgramExecutions.IProgramExecutions,
+                Api.Repository.ProgramExecutions.ProgramExecutionsRepository
+              >()
+            .AddRouting()
+            .AddGiraffe()
+        |> ignore
+
+        return ()
+    }
 
 [<EntryPoint>]
-let main args =
-    let builder = WebApplication.CreateBuilder(args)
-    configureServices builder.Services
+let main args : int =
+    result {
+        let builder = WebApplication.CreateBuilder(args)
+        do! configureServices builder.Services
 
-    let app = builder.Build()
+        let app = builder.Build()
 
-    configureApp app
-    app.Run()
+        configureApp app
+        app.Run()
 
-    0
+        return ReturnCode.Ok
+    }
+    |> Result.defaultWith (fun err ->
+        eprintfn "Something wrong happened when starting the process. Error: %A" err
+        ReturnCode.Error)

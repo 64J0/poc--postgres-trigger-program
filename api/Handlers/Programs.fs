@@ -34,7 +34,6 @@ let createProgram () : HttpHandler =
                     logger.LogError $"Database insertion failed with error {err}"
                     ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
                     return! json {| Message = "New program was not inserted!" |} next ctx
-
             with exn ->
                 logger.LogCritical $"Something wrong happened. Exception information: {exn}"
                 ctx.SetStatusCode(int HttpStatusCode.InternalServerError)

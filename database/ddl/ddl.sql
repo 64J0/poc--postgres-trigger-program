@@ -28,13 +28,15 @@ returns trigger as
 $$
 begin
     PERFORM(
-        SELECT pg_notify('program_manager_channel', NEW.id::text)
+        SELECT pg_notify('program_manager_channel', new.id::text)
     );
 
     RETURN null;
 end;
 $$ language plpgsql;
 
+-- https://stackoverflow.com/a/30884951
 create or replace trigger program_trigger_for_manager_svc
 after insert on program_executions
+for each row
 execute function trigger_manager_application();
