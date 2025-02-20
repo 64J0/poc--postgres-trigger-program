@@ -11,5 +11,6 @@ type IPrograms =
 
     abstract member read: unit -> Async<Result<ProgramsDto list, ApplicationError>>
 
-// abstract member update
+    abstract member update: programId: System.Guid -> programFilePath: string -> Async<Result<unit, ApplicationError>>
+    
 // abstract member delete

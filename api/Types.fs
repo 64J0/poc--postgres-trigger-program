@@ -4,22 +4,27 @@ open System
 
 type IDatasource = Npgsql.NpgsqlDataSource
 
+type ProgramsStorePath = string
+
 type ProgramsDto =
-    { Name: string
-      DockerImage: string
+    { Id: System.Guid option
+      ProgramName: string
+      ProgramFilePath: string option
       CreatedAt: DateTime }
 
 type ProgramExecutionsDtoInput =
-    { Name: string
+    { ProgramId: System.Guid
       ProgramInput: string
       CreatedAt: DateTime }
 
 type ProgramExecutionsDtoOutput =
-    { Name: string
-      DockerImage: string
+    { ProgramName: string
+      ProgramFilePath: string option
       ProgramInput: string
-      PullSuccess: Option<bool>
-      StdOutLog: Option<string>
-      StdErrLog: Option<string> }
+      PullSuccess: bool option
+      StdOutLog: string option
+      StdErrLog: string option }
 
-type ApplicationError = Database of string
+type ApplicationError =
+    | Database of string
+    | RequestFile of string

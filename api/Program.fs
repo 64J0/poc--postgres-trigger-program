@@ -18,7 +18,9 @@ let endpoints =
 
             POST
                 [ route "/program" (Api.Handlers.Programs.createProgram ())
-                  route "/execute" (Api.Handlers.ProgramExecutions.createProgramExecution ()) ] ] ]
+                  route "/execution" (Api.Handlers.ProgramExecutions.createProgramExecution ()) ]
+
+            PATCH [ routef "/program/%O" Api.Handlers.Programs.patchProgramFile ] ] ]
 
 let notFoundHandler = "Not Found" |> text |> RequestErrors.notFound
 
@@ -28,9 +30,11 @@ let configureApp (appBuilder: IApplicationBuilder) =
 let configureServices (services: IServiceCollection) =
     result {
         let! dataSource = Shared.Database.Main.getDatasource ()
+        let! programsStore = Shared.Database.Environment.PROGRAMS_STORE
 
         services
             .AddSingleton<Api.Types.IDatasource>(dataSource)
+            .AddSingleton<Api.Types.ProgramsStorePath>(programsStore)
             .AddScoped<Api.Repository.IPrograms.IPrograms, Api.Repository.Programs.ProgramsRepository>()
             .AddScoped<
                 Api.Repository.IProgramExecutions.IProgramExecutions,

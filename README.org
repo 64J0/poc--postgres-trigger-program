@@ -1,20 +1,16 @@
 #+TITLE: [POC] Postgres trigger program
 #+DATE: [2024-12-26 qui]
 
-The idea it to create an HTTP Rest API to interact with the user.
-
-This user will be able to POST requests scheduling the execution of
-programs. This will be mapped into a database (PostgreSQL) table so we keep the
-history of those operations.
+The idea is to create a multi-service application composed of 1) an HTTP Rest
+API to interact with the user, 2) a Postgres database to store the data and 3) a
+background application leveraging a MailboxProcessor that is notified by the
+database whenever a new ~program_execution~ entity is created and it's used to
+run the specified program, collect its output and update the database.
 
 Other than this, the user will be able to:
 
 - Register new scripts;
 - List scripts that are already registered.
-
-Then, whenever this execution table is updated it will notify a second
-application, running a MailboxProcessor that will be responsible for running
-these scripts and collecting their output (both success and failure).
 
 Some useful links:
 
@@ -58,8 +54,10 @@ Something to improve error handling later:
   # 3rd shell
   #
   # start playing with the API and check the logs from the manager process
+  #
+  # TODO: break this request into two: 1) create the script entity, 2) uploads the script.
   curl \
-    -d '{"name":"placeholder_001", "dockerImage":"poc_api_2:latest", "createdAt":"2024-01-01"}' \
+    -d '{"scriptName":"placeholder_001", "scriptFilePath":"poc_api_2:latest", "createdAt":"2024-01-01"}' \
     -H "Content-Type: application/json" \
     -X POST \
     http://localhost:5000/api/program

@@ -12,12 +12,12 @@ type ProgramExecutionsRepository() =
                 dataSource.CreateCommand(
                     """
                     INSERT INTO program_executions
-                      (program_name, program_input, created_at)
+                      (program_id, program_input, created_at)
                     VALUES ($1, $2, $3);
                     """
                 )
 
-            command.Parameters.AddWithValue(dto.Name) |> ignore
+            command.Parameters.AddWithValue(dto.ProgramId) |> ignore
             command.Parameters.AddWithValue(dto.ProgramInput) |> ignore
             command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
 
@@ -32,8 +32,8 @@ type ProgramExecutionsRepository() =
                 dataSource.CreateCommand(
                     """
                     SELECT 
-                      p.name, 
-                      p.docker_image, 
+                      p.program_name, 
+                      p.program_file_path, 
                       pe.program_input, 
                       po.pull_success, 
                       po.stdout_log, 
@@ -51,16 +51,21 @@ type ProgramExecutionsRepository() =
             let mutable dbResponse = []
 
             while! (reader.ReadAsync() |> Async.AwaitTask) do
-                let name = reader.GetString(0)
-                let dockerImage = reader.GetString(1)
+                let programName = reader.GetString(0)
+
+                let programFilePath =
+                    match reader.IsDBNull(1) with
+                    | true -> None
+                    | false -> Some(reader.GetString(1))
+
                 let programInput = reader.GetString(2)
                 let pullSuccess = Shared.Database.Main.tryGetValue<bool> (reader.GetBoolean) 3
                 let stdOutLog = Shared.Database.Main.tryGetValue<string> (reader.GetString) 4
                 let stdErrLog = Shared.Database.Main.tryGetValue<string> (reader.GetString) 5
 
                 dbResponse <-
-                    { Name = name
-                      DockerImage = dockerImage
+                    { ProgramName = programName
+                      ProgramFilePath = programFilePath
                       ProgramInput = programInput
                       PullSuccess = pullSuccess
                       StdOutLog = stdOutLog

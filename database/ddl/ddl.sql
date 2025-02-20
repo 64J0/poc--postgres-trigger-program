@@ -2,15 +2,18 @@ drop table if exists program_outputs;
 drop table if exists program_executions;
 drop table if exists programs;
 
+-- for simplicity, this is going to be used for running fsi scripts (F#
+-- interactive scripts)
 create table programs (
-    docker_image text primary key,
-    name text not null unique,
+    id uuid primary key,
+    program_name text not null,
+    program_file_path text default null,
     created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );
 
 create table program_executions (
     id serial primary key,
-    program_name text references programs(name) not null,
+    program_id text references programs(id) not null,
     program_input text not null,
     created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );
@@ -18,9 +21,11 @@ create table program_executions (
 create table program_outputs (
     id serial primary key,
     execution_id serial references program_executions(id) not null,
-    pull_success bool default null,
+    execution_success bool not null default false,
+    status_code int not null,
     stdout_log text not null,
-    stderr_log text not null
+    stderr_log text not null,
+    created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );
 
 create or replace function trigger_manager_application()

@@ -73,3 +73,55 @@ let getPrograms () : HttpHandler =
                 ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
                 return! json {| Message = "Something wrong happened" |} next ctx
         }
+
+let patchProgramFile (programId: System.Guid) : HttpHandler =
+    fun (next: HttpFunc) (ctx: HttpContext) ->
+        let logger = ctx.GetLogger()
+        let datasource = ctx.GetService<Api.Types.IDatasource>()
+        let programsStorePath = ctx.GetService<Api.Types.ProgramsStorePath>()
+        let programsRepository = ctx.GetService<Api.Repository.IPrograms.IPrograms>()
+        do programsRepository.DataSource <- Some datasource
+
+        use _ = logger.BeginScope("PatchProgramFile")
+
+        let tryGetScriptFile (formFiles: IFormFileCollection) : Result<IFormFile, ApplicationError> =
+            try
+                formFiles.GetFile "script" |> Ok
+            with _exn ->
+                ApplicationError.RequestFile "No 'script' file present at the request" |> Error
+
+        task {
+            try
+                let scriptFileResult = tryGetScriptFile ctx.Request.Form.Files
+                logger.LogDebug $"Script file: {scriptFileResult}"
+
+                match scriptFileResult with
+                | Ok scriptFile ->
+                    let scriptFilePath =
+                        System.IO.Path.Combine([| programsStorePath; scriptFile.FileName |])
+
+                    use targetFilePath = System.IO.File.Create scriptFilePath
+                    do! scriptFile.CopyToAsync targetFilePath |> Async.AwaitTask
+                    targetFilePath.Flush()
+                    targetFilePath.Close()
+
+                    let! dbCreationResult = programsRepository.update programId scriptFilePath
+
+                    match dbCreationResult with
+                    | Ok() ->
+                        logger.LogDebug "Database patch complete"
+                        ctx.SetStatusCode(int HttpStatusCode.Accepted)
+                        return! json {| Message = "Program file patched!" |} next ctx
+                    | Error err ->
+                        logger.LogError $"Database insertion failed with error {err}"
+                        ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
+                        return! json {| Message = "Program file was not patched!" |} next ctx
+                | Error err ->
+                    logger.LogError $"{err}"
+                    ctx.SetStatusCode(int HttpStatusCode.BadRequest)
+                    return! json {| Message = $"ERROR: Program file not patched. {err}" |} next ctx
+            with exn ->
+                logger.LogCritical $"Something wrong happened. Exception information: {exn}"
+                ctx.SetStatusCode(int HttpStatusCode.InternalServerError)
+                return! json {| Message = "Something wrong happened" |} next ctx
+        }

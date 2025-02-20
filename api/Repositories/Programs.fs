@@ -12,13 +12,15 @@ type ProgramsRepository() =
                 dataSource.CreateCommand(
                     """
                     INSERT INTO programs
-                      (name, docker_image, created_at)
+                      (id, program_name, created_at)
                     VALUES ($1, $2, $3);
                     """
                 )
 
-            command.Parameters.AddWithValue(dto.Name) |> ignore
-            command.Parameters.AddWithValue(dto.DockerImage) |> ignore
+            let newId = System.Guid.NewGuid()
+
+            command.Parameters.AddWithValue(newId) |> ignore
+            command.Parameters.AddWithValue(dto.ProgramName) |> ignore
             command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
 
             let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
@@ -32,8 +34,9 @@ type ProgramsRepository() =
                 dataSource.CreateCommand(
                     """
                     SELECT
-                      p.name,
-                      p.docker_image,
+                      p.id,
+                      p.program_name,
+                      p.program_file_path,
                       p.created_at
                     FROM programs p;
                     """
@@ -44,50 +47,58 @@ type ProgramsRepository() =
             let mutable dbResponse = []
 
             while! (reader.ReadAsync() |> Async.AwaitTask) do
-                let name = reader.GetString(0)
-                let dockerImage = reader.GetString(1)
-                let createdAt = reader.GetDateTime(2)
+                let programId = reader.GetString(0) |> System.Guid
+            
+                let programName = reader.GetString(1)
+
+                let programFilePath =
+                    match reader.IsDBNull(2) with
+                    | true -> None
+                    | false -> Some(reader.GetString(2))
+
+                let createdAt = reader.GetDateTime(3)
 
                 dbResponse <-
-                    { Name = name
-                      DockerImage = dockerImage
+                    { Id = Some programId
+                      ProgramName = programName
+                      ProgramFilePath = programFilePath
                       CreatedAt = createdAt }
                     :: dbResponse
 
             return Ok dbResponse
         }
 
-    member private _.dbUpdate (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
+    member private _.dbUpdate (dataSource: NpgsqlDataSource) (programId: System.Guid) (programFilePath: string) =
         async {
             use command =
                 dataSource.CreateCommand(
                     """
                     UPDATE programs
-                    SET name = $1
-                    WHERE 
-                    docker_image = $2;
+                    SET program_file_path = $1
+                    WHERE program_id = $2;
                     """
                 )
 
-            command.Parameters.AddWithValue(dto.Name) |> ignore
-            command.Parameters.AddWithValue(dto.DockerImage) |> ignore
+            command.Parameters.AddWithValue(programFilePath) |> ignore
+            command.Parameters.AddWithValue(programId) |> ignore
 
             let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
 
             return Ok()
         }
 
+    // XXX just sample, this is not currently used by the application
     member private _.dbDelete (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
         async {
             use command =
                 dataSource.CreateCommand(
                     """
                     DELETE FROM programs
-                    WHERE docker_image = $1;
+                    WHERE program_name = $1;
                     """
                 )
 
-            command.Parameters.AddWithValue(dto.DockerImage) |> ignore
+            command.Parameters.AddWithValue(dto.ProgramName) |> ignore
 
             let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask
 
@@ -105,4 +116,9 @@ type ProgramsRepository() =
         member this.read() =
             match (this :> IPrograms).DataSource with
             | Some dataSource -> this.dbRead (dataSource)
+            | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return
+
+        member this.update(programId: System.Guid) (programFilePath: string) =
+            match (this :> IPrograms).DataSource with
+            | Some dataSource -> this.dbUpdate (dataSource) (programId) (programFilePath)
             | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return
