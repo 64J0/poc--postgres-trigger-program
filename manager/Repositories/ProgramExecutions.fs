@@ -13,10 +13,13 @@ module ProgramExecutions =
                     """
                     SELECT
                       pe.id,
-                      pe.program_name,
+                      pe.program_id,
                       pe.program_input,
-                      pe.created_at
+                      pe.created_at,
+                      p.program_file_path
                     FROM program_executions pe
+                    JOIN programs p
+                    ON pe.program_id = p.id
                     WHERE pe.id = $1;
                     """
                 )
@@ -32,12 +35,14 @@ module ProgramExecutions =
                 let programName = reader.GetString(1)
                 let programInput = reader.GetString(2)
                 let createdAt = reader.GetDateTime(3)
+                let programFilePath = Shared.Database.Main.tryGetValue reader.GetString 4
 
                 dbResponse <-
                     { Id = id
                       ProgramName = programName
                       ProgramInput = programInput
-                      CreatedAt = createdAt }
+                      CreatedAt = createdAt
+                      ProgramFilePath = programFilePath }
                     :: dbResponse
 
             return

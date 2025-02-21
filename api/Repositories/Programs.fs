@@ -48,7 +48,7 @@ type ProgramsRepository() =
 
             while! (reader.ReadAsync() |> Async.AwaitTask) do
                 let programId = reader.GetString(0) |> System.Guid
-            
+
                 let programName = reader.GetString(1)
 
                 let programFilePath =
@@ -118,7 +118,7 @@ type ProgramsRepository() =
             | Some dataSource -> this.dbRead (dataSource)
             | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return
 
-        member this.update(programId: System.Guid) (programFilePath: string) =
+        member this.update (programId: System.Guid) (programFilePath: string) =
             match (this :> IPrograms).DataSource with
             | Some dataSource -> this.dbUpdate (dataSource) (programId) (programFilePath)
             | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return

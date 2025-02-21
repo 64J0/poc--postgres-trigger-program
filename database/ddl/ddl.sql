@@ -23,8 +23,8 @@ create table program_outputs (
     execution_id serial references program_executions(id) not null,
     execution_success bool not null default false,
     status_code int not null,
-    stdout_log text not null,
-    stderr_log text not null,
+    stdout_log text,
+    stderr_log text,
     created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );
 

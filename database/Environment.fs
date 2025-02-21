@@ -30,14 +30,16 @@ module Environment =
             "Host=localhost;Username=postgres;Password=changeme;Database=postgres;Connection Pruning Interval=1;Connection Idle Lifetime=2;Enlist=false;No Reset On Close=true"
 
     let POSTGRES_CHANNEL = Ok "program_manager_channel"
+
     let PROGRAMS_STORE: Result<string, CustomError> =
         let apiDirectory = Directory.GetCurrentDirectory()
         let debugProgramsStore = Path.Combine([| apiDirectory; ".."; "store/" |])
+
         if Directory.Exists(debugProgramsStore) then
-            Ok (debugProgramsStore)
+            Ok(debugProgramsStore)
         else
             Directory.CreateDirectory(debugProgramsStore) |> ignore
-            Ok (debugProgramsStore)
+            Ok(debugProgramsStore)
 #else
     let DB_CONN = tryGetEnvironmentVariable "DB_CONNECTION_STRING"
     let POSTGRES_CHANNEL = tryGetEnvironmentVariable "POSTGRES_CHANNEL"

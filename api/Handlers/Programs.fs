@@ -99,6 +99,7 @@ let patchProgramFile (programId: System.Guid) : HttpHandler =
                 | Ok scriptFile ->
                     let scriptFilePath =
                         System.IO.Path.Combine([| programsStorePath; scriptFile.FileName |])
+                        |> System.IO.Path.GetFullPath
 
                     use targetFilePath = System.IO.File.Create scriptFilePath
                     do! scriptFile.CopyToAsync targetFilePath |> Async.AwaitTask
