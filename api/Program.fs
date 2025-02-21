@@ -18,7 +18,7 @@ let endpoints =
 
             POST
                 [ route "/program" (Api.Handlers.Programs.createProgram ())
-                  route "/execution" (Api.Handlers.ProgramExecutions.createProgramExecution ()) ]
+                  routef "/execution/%O" Api.Handlers.ProgramExecutions.createProgramExecution ]
 
             PATCH [ routef "/program/%O" Api.Handlers.Programs.patchProgramFile ] ] ]
 

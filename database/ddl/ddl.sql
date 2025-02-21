@@ -13,7 +13,7 @@ create table programs (
 
 create table program_executions (
     id serial primary key,
-    program_id text references programs(id) not null,
+    program_id uuid references programs(id) not null,
     program_input text not null,
     created_at timestamp with time zone default CURRENT_TIMESTAMP not null
 );

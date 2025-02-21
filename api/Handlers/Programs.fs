@@ -20,16 +20,22 @@ let createProgram () : HttpHandler =
         task {
             try
                 let body = ctx.Request.Body
-                let! serializedBody = serializer.DeserializeAsync<ProgramsDto> body
+                let! serializedBody = serializer.DeserializeAsync<ProgramsDtoInput> body
                 logger.LogDebug "Body serialization complete"
 
-                let! dbCreationResult = programsRepository.create serializedBody
+                let newId = System.Guid.NewGuid()
+
+                let! dbCreationResult =
+                    programsRepository.create
+                        { ProgramId = newId
+                          ProgramName = serializedBody.ProgramName
+                          CreatedAt = System.DateTime.Now }
 
                 match dbCreationResult with
                 | Ok() ->
                     logger.LogDebug "Database insertion complete"
                     ctx.SetStatusCode(int HttpStatusCode.Created)
-                    return! json {| Message = "New program inserted!" |} next ctx
+                    return! json {| Message = $"New program inserted with id: {newId}!" |} next ctx
                 | Error err ->
                     logger.LogError $"Database insertion failed with error {err}"
                     ctx.SetStatusCode(int HttpStatusCode.InternalServerError)

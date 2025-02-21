@@ -7,7 +7,7 @@ open Microsoft.AspNetCore.Http
 open Giraffe
 open Api.Types
 
-let createProgramExecution () : HttpHandler =
+let createProgramExecution (programId: System.Guid) : HttpHandler =
     fun (next: HttpFunc) (ctx: HttpContext) ->
         let logger = ctx.GetLogger()
         let serializer = ctx.GetJsonSerializer()
@@ -26,7 +26,11 @@ let createProgramExecution () : HttpHandler =
                 let! serializedBody = serializer.DeserializeAsync<ProgramExecutionsDtoInput> body
                 logger.LogDebug "Body serialization complete"
 
-                let! dbCreationResult = programExecutionsRepository.create serializedBody
+                let! dbCreationResult =
+                    programExecutionsRepository.create
+                        { ProgramId = programId
+                          ProgramInput = serializedBody.ProgramInput
+                          CreatedAt = System.DateTime.Now }
 
                 match dbCreationResult with
                 | Ok() ->

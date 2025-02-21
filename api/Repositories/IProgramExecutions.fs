@@ -7,7 +7,7 @@ open Api.Types
 type IProgramExecutions =
     abstract member DataSource: NpgsqlDataSource option with get, set
 
-    abstract member create: dto: ProgramExecutionsDtoInput -> Async<Result<unit, ApplicationError>>
+    abstract member create: dto: ProgramExecutionsDtoToDB -> Async<Result<unit, ApplicationError>>
 
     abstract member read: unit -> Async<Result<ProgramExecutionsDtoOutput list, ApplicationError>>
 

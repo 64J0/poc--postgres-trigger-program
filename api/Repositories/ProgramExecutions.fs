@@ -6,7 +6,7 @@ open Api.Repository.IProgramExecutions
 open Api.Types
 
 type ProgramExecutionsRepository() =
-    member private this.dbCreate (dataSource: NpgsqlDataSource) (dto: ProgramExecutionsDtoInput) =
+    member private this.dbCreate (dataSource: NpgsqlDataSource) (dto: ProgramExecutionsDtoToDB) =
         async {
             let command =
                 dataSource.CreateCommand(
@@ -78,7 +78,7 @@ type ProgramExecutionsRepository() =
     interface IProgramExecutions with
         member val DataSource = None with get, set
 
-        member this.create(dto: ProgramExecutionsDtoInput) =
+        member this.create(dto: ProgramExecutionsDtoToDB) =
             match (this :> IProgramExecutions).DataSource with
             | Some dataSource -> this.dbCreate (dataSource) (dto)
             | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return

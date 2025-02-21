@@ -33,7 +33,11 @@ module Environment =
 
     let PROGRAMS_STORE: Result<string, CustomError> =
         let apiDirectory = Directory.GetCurrentDirectory()
-        let debugProgramsStore = Path.Combine([| apiDirectory; ".."; "store/" |])
+
+        let debugProgramsStore =
+            Path.Combine([| apiDirectory; ".."; "store/" |]) |> Path.GetFullPath
+
+        printfn "debugProgramsStore: %A" debugProgramsStore
 
         if Directory.Exists(debugProgramsStore) then
             Ok(debugProgramsStore)

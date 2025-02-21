@@ -54,21 +54,25 @@ Something to improve error handling later:
   # 3rd shell
   #
   # start playing with the API and check the logs from the manager process
-  #
-  # TODO: break this request into two: 1) create the script entity, 2) uploads the script.
   curl \
-    -d '{"scriptName":"placeholder_001", "scriptFilePath":"poc_api_2:latest", "createdAt":"2024-01-01"}' \
+    -d '{"programName":"placeholder_001"}' \
     -H "Content-Type: application/json" \
     -X POST \
     http://localhost:5000/api/program
 
   curl http://localhost:5000/api/programs
 
+  # upload the script (change the necessary details at the following command):
+  curl --request PATCH \
+  --url http://localhost:5000/api/program/PROGRAM_ID_GUID \
+  --header 'Content-Type: multipart/form-data' \
+  --form script=@/YOUR_LOCAL_PATH/samples/get_date.fsx
+
   curl \
-    -d '{"name":"placeholder_001", "programInput":"1 2 3", "createdAt":"2024-01-02"}' \
+    -d '{"programInput":"1 2 3"}' \
     -H "Content-Type: application/json" \
     -X POST \
-    http://localhost:5000/api/execute
+    http://localhost:5000/api/execution/PROGRAM_ID_GUID
 
   curl http://localhost:5000/api/executions
 #+END_SRC

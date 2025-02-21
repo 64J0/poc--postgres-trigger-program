@@ -1,21 +1,27 @@
 module Api.Types
 
-open System
-
 type IDatasource = Npgsql.NpgsqlDataSource
 
 type ProgramsStorePath = string
 
-type ProgramsDto =
-    { Id: System.Guid option
-      ProgramName: string
-      ProgramFilePath: string option
-      CreatedAt: DateTime }
+type ProgramsDtoInput = { ProgramName: string }
 
-type ProgramExecutionsDtoInput =
+type ProgramsDtoToDB =
+    { ProgramId: System.Guid
+      ProgramName: string
+      CreatedAt: System.DateTime }
+
+type ProgramsDtoFromDB =
+    { ProgramId: System.Guid
+      ProgramName: string
+      CreatedAt: System.DateTime }
+
+type ProgramExecutionsDtoInput = { ProgramInput: string }
+
+type ProgramExecutionsDtoToDB =
     { ProgramId: System.Guid
       ProgramInput: string
-      CreatedAt: DateTime }
+      CreatedAt: System.DateTime }
 
 type ProgramExecutionsDtoOutput =
     { ProgramName: string

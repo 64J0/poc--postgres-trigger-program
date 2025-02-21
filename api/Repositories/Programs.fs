@@ -6,7 +6,7 @@ open Api.Repository.IPrograms
 open Api.Types
 
 type ProgramsRepository() =
-    member private _.dbCreate (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
+    member private _.dbCreate (dataSource: NpgsqlDataSource) (dto: ProgramsDtoToDB) =
         async {
             use command =
                 dataSource.CreateCommand(
@@ -17,9 +17,7 @@ type ProgramsRepository() =
                     """
                 )
 
-            let newId = System.Guid.NewGuid()
-
-            command.Parameters.AddWithValue(newId) |> ignore
+            command.Parameters.AddWithValue(dto.ProgramId) |> ignore
             command.Parameters.AddWithValue(dto.ProgramName) |> ignore
             command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
 
@@ -36,7 +34,6 @@ type ProgramsRepository() =
                     SELECT
                       p.id,
                       p.program_name,
-                      p.program_file_path,
                       p.created_at
                     FROM programs p;
                     """
@@ -47,21 +44,15 @@ type ProgramsRepository() =
             let mutable dbResponse = []
 
             while! (reader.ReadAsync() |> Async.AwaitTask) do
-                let programId = reader.GetString(0) |> System.Guid
+                let programId = reader.GetGuid(0)
 
                 let programName = reader.GetString(1)
 
-                let programFilePath =
-                    match reader.IsDBNull(2) with
-                    | true -> None
-                    | false -> Some(reader.GetString(2))
-
-                let createdAt = reader.GetDateTime(3)
+                let createdAt = reader.GetDateTime(2)
 
                 dbResponse <-
-                    { Id = Some programId
+                    { ProgramId = programId
                       ProgramName = programName
-                      ProgramFilePath = programFilePath
                       CreatedAt = createdAt }
                     :: dbResponse
 
@@ -75,7 +66,7 @@ type ProgramsRepository() =
                     """
                     UPDATE programs
                     SET program_file_path = $1
-                    WHERE program_id = $2;
+                    WHERE id = $2;
                     """
                 )
 
@@ -88,7 +79,7 @@ type ProgramsRepository() =
         }
 
     // XXX just sample, this is not currently used by the application
-    member private _.dbDelete (dataSource: NpgsqlDataSource) (dto: ProgramsDto) =
+    member private _.dbDelete (dataSource: NpgsqlDataSource) (dto: ProgramsDtoInput) =
         async {
             use command =
                 dataSource.CreateCommand(
@@ -108,7 +99,7 @@ type ProgramsRepository() =
     interface IPrograms with
         member val DataSource = None with get, set
 
-        member this.create(dto: ProgramsDto) =
+        member this.create(dto: ProgramsDtoToDB) =
             match (this :> IPrograms).DataSource with
             | Some dataSource -> this.dbCreate (dataSource) (dto)
             | None -> Error(ApplicationError.Database "DataSource object was not set") |> async.Return
