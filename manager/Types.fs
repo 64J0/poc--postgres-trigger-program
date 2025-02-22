@@ -22,6 +22,12 @@ type ApplicationError =
     | InvalidProgramExecution of string
 
 type Message =
-    | ExecuteProgram of ExecutionId: int * DataSource: NpgsqlDataSource
-    | HandleExecutionSuccess of programOutputDto: ProgramOutputDto * DataSource: NpgsqlDataSource
-    | HandleExecutionFailure of programOutputDto: ProgramOutputDto * DataSource: NpgsqlDataSource
+    | ExecuteProgram of processor: MailboxProcessor<Message> * ExecutionId: int * DataSource: NpgsqlDataSource
+    | HandleExecutionSuccess of
+        processor: MailboxProcessor<Message> *
+        programOutputDto: ProgramOutputDto *
+        DataSource: NpgsqlDataSource
+    | HandleExecutionFailure of
+        processor: MailboxProcessor<Message> *
+        programOutputDto: ProgramOutputDto *
+        DataSource: NpgsqlDataSource
