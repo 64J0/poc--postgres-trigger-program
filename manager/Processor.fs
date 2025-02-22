@@ -56,18 +56,14 @@ module Processor =
 
             let message =
                 match programExecutionRes.ExitCode with
-                | 0 -> Message.HandleExecutionSuccess(processor, programOutputDto, dataSource)
-                | _ -> Message.HandleExecutionFailure(processor, programOutputDto, dataSource)
+                | 0 -> Message.HandleExecutionSuccess(programOutputDto, dataSource)
+                | _ -> Message.HandleExecutionFailure(programOutputDto, dataSource)
 
             return processor.Post(message)
         }
         |> logError ($"handleExecuteProgram for execution {executionId}")
 
-    let private handleExecutionSuccess
-        (_processor: MailboxProcessor<Message>)
-        (programOutputDto: Types.ProgramOutputDto)
-        (dataSource: NpgsqlDataSource)
-        =
+    let private handleExecutionSuccess (programOutputDto: Types.ProgramOutputDto) (dataSource: NpgsqlDataSource) =
         asyncResult {
             let! _ = Manager.Repositories.ProgramOutputs.create dataSource programOutputDto
 
@@ -75,11 +71,7 @@ module Processor =
         }
         |> logError ($"handleExecutionSuccess for execution id {programOutputDto.ExecutionId}")
 
-    let private handleExecutionFailure
-        (_processor: MailboxProcessor<Message>)
-        (programOutputDto: Types.ProgramOutputDto)
-        (dataSource: NpgsqlDataSource)
-        =
+    let private handleExecutionFailure (programOutputDto: Types.ProgramOutputDto) (dataSource: NpgsqlDataSource) =
         asyncResult {
             let! _ = Manager.Repositories.ProgramOutputs.create dataSource programOutputDto
 
@@ -94,18 +86,18 @@ module Processor =
                     let! msg = inbox.Receive()
 
                     match msg with
-                    | Message.ExecuteProgram(processor, executionId, dataSource) ->
-                        do! handleExecuteProgram (processor) (executionId) (dataSource)
+                    | Message.ExecuteProgram(executionId, dataSource) ->
+                        do! handleExecuteProgram (inbox) (executionId) (dataSource)
                         return! loop ()
-                    | HandleExecutionSuccess(processor, programOutputDto, dataSource) ->
+                    | HandleExecutionSuccess(programOutputDto, dataSource) ->
                         // 1. write the output to the database
-                        do! handleExecutionSuccess (processor) (programOutputDto) (dataSource)
+                        do! handleExecutionSuccess (programOutputDto) (dataSource)
                         return! loop ()
-                    | HandleExecutionFailure(processor, programOutputDto, dataSource) ->
+                    | HandleExecutionFailure(programOutputDto, dataSource) ->
                         // 1. write the output to the database
                         // 2. print to the error stream
                         // No retry for now
-                        do! handleExecutionFailure (processor) (programOutputDto) (dataSource)
+                        do! handleExecutionFailure (programOutputDto) (dataSource)
                         return! loop ()
                 }
 

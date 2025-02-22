@@ -17,7 +17,7 @@ module Main =
 
                 match System.Int32.TryParse eventArgs.Payload with
                 | true, programExecutionId ->
-                    let message = Message.ExecuteProgram(processor, programExecutionId, dataSource)
+                    let message = Message.ExecuteProgram(programExecutionId, dataSource)
                     processor.Post(message)
                 | false, _ -> eprintfn "It was not possible to parse %A to integer" eventArgs.Payload
 
