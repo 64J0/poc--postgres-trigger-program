@@ -7,7 +7,7 @@ module ProgramExecutions =
     open Manager.Types
 
     let getById (dataSource: NpgsqlDataSource) (programExecutionId: int) =
-        async {
+        task {
             use command =
                 dataSource.CreateCommand(
                     """
@@ -26,11 +26,11 @@ module ProgramExecutions =
 
             command.Parameters.AddWithValue(programExecutionId) |> ignore
 
-            use! reader = command.ExecuteReaderAsync() |> Async.AwaitTask
+            use! reader = command.ExecuteReaderAsync()
 
             let mutable dbResponse = []
 
-            while! (reader.ReadAsync() |> Async.AwaitTask) do
+            while! reader.ReadAsync() do
                 let id = reader.GetInt32(0)
                 let programName = reader.GetString(1)
                 let programInput = reader.GetString(2)
@@ -51,3 +51,4 @@ module ProgramExecutions =
                 | None ->
                     Error(Database $"No program execution entity found at the database for id {programExecutionId}")
         }
+        |> Async.AwaitTask

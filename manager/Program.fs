@@ -17,7 +17,7 @@ module Main =
 
                 match System.Int32.TryParse eventArgs.Payload with
                 | true, programExecutionId ->
-                    let message = Message.ExecuteProgram(processor, programExecutionId, dataSource)
+                    let message = Message.ExecuteProgram(programExecutionId, dataSource)
                     processor.Post(message)
                 | false, _ -> eprintfn "It was not possible to parse %A to integer" eventArgs.Payload
 
@@ -28,7 +28,7 @@ module Main =
             let! conn = Shared.Database.Main.getAsyncConnection notificationEventHandler
 
             while true do
-                printfn "Started listening for Postgres notifications... "
+                printfn "Waiting for next Postgres notification... "
                 conn.Wait()
 
             return 0
