@@ -17,18 +17,22 @@ module Processor =
             | Error err -> eprintfn $"An error happened when processing message {message}: {err}"
         }
 
-    let private runProgram (programFilePath: string) (programInput: string) =
-        cli {
-            Exec "dotnet"
-            Arguments($"fsi {programFilePath} {programInput}")
-        }
-        |> Command.executeAsync
+    let private runProgram (programFilePath: string) (programInput: string) : Async<Result<Output, ApplicationError>> =
+        async {
+            try
+                let! output =
+                    cli {
+                        Exec "dotnet"
+                        Arguments($"fsi {programFilePath} {programInput}")
+                    }
+                    |> Command.executeAsync
 
-    let private handleExecuteProgram
-        (processor: MailboxProcessor<Message>)
-        (executionId: int)
-        (dataSource: NpgsqlDataSource)
-        =
+                return Ok output
+            with exn ->
+                return Error(ProgramExecutionError exn.Message)
+        }
+
+    let private handleExecuteProgram (executionId: int) (dataSource: NpgsqlDataSource) =
         // 1. get the program details from database using the execution id
         // 2. run the program and collect the result
         // 3. call the next stage if the execution was a success or a failure
@@ -54,14 +58,8 @@ module Processor =
                   StdErrLog = programExecutionRes.Error
                   CreatedAt = System.DateTime.Now }
 
-            let message =
-                match programExecutionRes.ExitCode with
-                | 0 -> Message.HandleExecutionSuccess(programOutputDto, dataSource)
-                | _ -> Message.HandleExecutionFailure(programOutputDto, dataSource)
-
-            return processor.Post(message)
+            return programOutputDto
         }
-        |> logError ($"handleExecuteProgram for execution {executionId}")
 
     let private handleExecutionSuccess (programOutputDto: Types.ProgramOutputDto) (dataSource: NpgsqlDataSource) =
         asyncResult {
@@ -87,7 +85,21 @@ module Processor =
 
                     match msg with
                     | Message.ExecuteProgram(executionId, dataSource) ->
-                        do! handleExecuteProgram (inbox) (executionId) (dataSource)
+                        let! programOutputDtoRes = handleExecuteProgram (executionId) (dataSource)
+
+                        match programOutputDtoRes with
+                        | Ok programOutputDto ->
+
+                            let message =
+                                match programOutputDto.StatusCode with
+                                | 0 -> Message.HandleExecutionSuccess(programOutputDto, dataSource)
+                                | _ -> Message.HandleExecutionFailure(programOutputDto, dataSource)
+
+                            inbox.Post(message) |> ignore
+                        | Error err ->
+                            logError ($"handleExecuteProgram error for execution id {executionId}: {err}.")
+                            |> ignore
+
                         return! loop ()
                     | HandleExecutionSuccess(programOutputDto, dataSource) ->
                         // 1. write the output to the database
