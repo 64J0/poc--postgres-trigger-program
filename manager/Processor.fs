@@ -56,24 +56,14 @@ module Processor =
                     )
                 )
 
-            // let! programExecutionRes = runProgram programFilePath dbProgramExecution.ProgramInput
-
-            // let programOutputDto: Types.ProgramOutputDto =
-            //     { ExecutionId = executionId
-            //       ExecutionSuccess = (programExecutionRes.ExitCode = 0)
-            //       StatusCode = programExecutionRes.ExitCode
-            //       StdOutLog = programExecutionRes.Text
-            //       StdErrLog = programExecutionRes.Error
-            //       CreatedAt = System.DateTime.Now }
-
-            printfn "programFilePath: %s" programFilePath
+            let! programExecutionRes = runProgram programFilePath dbProgramExecution.ProgramInput
 
             let programOutputDto: Types.ProgramOutputDto =
                 { ExecutionId = executionId
-                  ExecutionSuccess = true
-                  StatusCode = 0
-                  StdOutLog = Some "OK"
-                  StdErrLog = None
+                  ExecutionSuccess = (programExecutionRes.ExitCode = 0)
+                  StatusCode = programExecutionRes.ExitCode
+                  StdOutLog = programExecutionRes.Text
+                  StdErrLog = programExecutionRes.Error
                   CreatedAt = System.DateTime.Now }
 
             return!
