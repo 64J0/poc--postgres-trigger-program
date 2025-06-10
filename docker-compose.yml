@@ -4,6 +4,11 @@ services:
   postgres:
     container_name: postgres_container
     image: postgres:17
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 3s
+      retries: 6
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
@@ -19,21 +24,26 @@ services:
   api:
     container_name: api
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     build:
       context: .
       dockerfile: Dockerfile.api
     environment:
       - DB_CONNECTION_STRING=Host=postgres;Username=postgres;Password=changeme;Database=postgres;Connection Pruning Interval=1;Connection Idle Lifetime=2;Enlist=false;No Reset On Close=true
+      - PROGRAMS_STORE=/app/store/
     ports:
-      - "5000:8080"
+      - "5000:5000"
     networks:
       - postgres
-
+    volumes:
+      - script-store:/app/store
+      
   manager:
     container_name: manager
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     build:
       context: .
       dockerfile: Dockerfile.manager
@@ -42,7 +52,12 @@ services:
       - POSTGRES_CHANNEL=program_manager_channel
     networks:
       - postgres
+    volumes:
+      - script-store:/app/store
 
 networks:
   postgres:
     driver: bridge
+
+volumes:
+  script-store:

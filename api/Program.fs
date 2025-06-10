@@ -55,6 +55,9 @@ let main args : int =
 
         let app = builder.Build()
 
+        // https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/webapplication#working-with-ports
+        app.Urls.Add("http://0.0.0.0:5000")
+
         configureApp app
         app.Run()
 

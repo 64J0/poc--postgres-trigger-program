@@ -104,15 +104,17 @@ let patchProgramFile (programId: System.Guid) : HttpHandler =
                 match scriptFileResult with
                 | Ok scriptFile ->
                     let scriptFilePath =
-                        System.IO.Path.Combine([| programsStorePath; scriptFile.FileName |])
+                        System.IO.Path.Combine([| programsStorePath; programId.ToString(); scriptFile.FileName |])
                         |> System.IO.Path.GetFullPath
+                        |> System.IO.FileInfo
 
-                    use targetFilePath = System.IO.File.Create scriptFilePath
+                    let _ = System.IO.Directory.CreateDirectory scriptFilePath.DirectoryName
+                    use targetFilePath = System.IO.File.Create scriptFilePath.FullName
                     do! scriptFile.CopyToAsync targetFilePath |> Async.AwaitTask
                     targetFilePath.Flush()
                     targetFilePath.Close()
 
-                    let! dbCreationResult = programsRepository.update programId scriptFilePath
+                    let! dbCreationResult = programsRepository.update programId scriptFilePath.FullName
 
                     match dbCreationResult with
                     | Ok() ->

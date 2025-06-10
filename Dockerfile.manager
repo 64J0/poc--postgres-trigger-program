@@ -9,7 +9,7 @@ RUN dotnet restore /app/manager/
 RUN dotnet publish /app/manager/ --no-restore -c Release -o out
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:9.0
+FROM mcr.microsoft.com/dotnet/sdk:9.0
 
 WORKDIR /app
 

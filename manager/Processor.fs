@@ -113,7 +113,7 @@ module Processor =
                         | Message.HandleExecutionFailure(programOutputDto, dataSource) ->
                             do! handleExecutionFailure (programOutputDto) (dataSource)
                         | Message.JustPrintErrorMessage(message) ->
-                            do eprintfn "An error happened when processing message %s" message
+                            do eprintfn "An error happened when processing message: %s" message
 
                         return! loop ()
                     with exn ->

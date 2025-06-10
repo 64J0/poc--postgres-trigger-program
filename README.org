@@ -20,7 +20,37 @@ Other than this, when using the API the user will be able to:
 - [X] List scripts that are already registered;
 - [ ] Get the script execution results.
 
-** How to run
+** How to run with containers
+
+#+BEGIN_SRC bash :tangle no
+  # start the containerized project
+  make compose-up
+
+  # start playing with the API and check the logs from the manager process
+  curl \
+    -d '{"programName":"placeholder_001"}' \
+    -H "Content-Type: application/json" \
+    -X POST \
+    http://localhost:5000/api/program
+
+  curl http://localhost:5000/api/programs
+
+  # upload the script (change the necessary details at the following command):
+  curl --request PATCH \
+  --url http://localhost:5000/api/program/PROGRAM_ID_GUID \
+  --header 'Content-Type: multipart/form-data' \
+  --form script=@/YOUR_LOCAL_PATH/samples/wait.fsx
+
+  curl \
+    -d '{"programInput":"100"}' \
+    -H "Content-Type: application/json" \
+    -X POST \
+    http://localhost:5000/api/execution/PROGRAM_ID_GUID
+
+  # check the database and the container logs
+#+END_SRC
+
+** How to run with dotnet CLI
 
 #+BEGIN_SRC bash :tangle no
   # 1st shell
