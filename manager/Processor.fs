@@ -73,14 +73,13 @@ module Processor =
                 | false -> Error(ApplicationError.ProgramExecutionErrorDto programOutputDto)
         }
 
-    /// 1. write the output to the database
+    /// 1. write the success output to the database
     /// No other side effects for now
     let private handleExecutionSuccess (programOutputDto: Types.ProgramOutputDto) (dataSource: NpgsqlDataSource) =
         Manager.Repositories.ProgramOutputs.create dataSource programOutputDto
         |> logError ($"handleExecutionSuccess for execution id {programOutputDto.ExecutionId}")
 
-    /// 1. write the output to the database
-    /// 2. print to the error stream
+    /// 1. write the fail output to the database
     /// No retry for now
     let private handleExecutionFailure (programOutputDto: Types.ProgramOutputDto) (dataSource: NpgsqlDataSource) =
         Manager.Repositories.ProgramOutputs.create dataSource programOutputDto
