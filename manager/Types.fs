@@ -21,8 +21,10 @@ type ApplicationError =
     | Database of string
     | InvalidProgramExecution of string
     | ProgramExecutionError of string
+    | ProgramExecutionErrorDto of ProgramOutputDto
 
 type Message =
     | ExecuteProgram of ExecutionId: int * DataSource: NpgsqlDataSource
     | HandleExecutionSuccess of programOutputDto: ProgramOutputDto * DataSource: NpgsqlDataSource
     | HandleExecutionFailure of programOutputDto: ProgramOutputDto * DataSource: NpgsqlDataSource
+    | JustPrintErrorMessage of message: string

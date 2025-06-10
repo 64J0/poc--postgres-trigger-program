@@ -6,6 +6,11 @@ module ProgramOutputs =
 
     open Manager.Types
 
+    let private transformOption (value: Option<'T>) =
+        match value with
+        | Some v -> v :> obj
+        | None -> System.DBNull.Value :> obj
+
     let create (dataSource: NpgsqlDataSource) (dto: ProgramOutputDto) =
         async {
             let command =
@@ -25,8 +30,8 @@ module ProgramOutputs =
             command.Parameters.AddWithValue(dto.ExecutionId) |> ignore
             command.Parameters.AddWithValue(dto.ExecutionSuccess) |> ignore
             command.Parameters.AddWithValue(dto.StatusCode) |> ignore
-            command.Parameters.AddWithValue(dto.StdOutLog) |> ignore
-            command.Parameters.AddWithValue(dto.StdErrLog) |> ignore
+            command.Parameters.AddWithValue(transformOption dto.StdOutLog) |> ignore
+            command.Parameters.AddWithValue(transformOption dto.StdErrLog) |> ignore
             command.Parameters.AddWithValue(dto.CreatedAt) |> ignore
 
             let! _ = command.ExecuteNonQueryAsync() |> Async.AwaitTask

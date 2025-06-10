@@ -8,13 +8,18 @@ module Processor =
 
     open Types
 
-    let private logError<'T, 'TError> (message: string) (fn: Async<Result<'T, 'TError>>) =
+    /// If the `fn` returns a Result.Error, then log a message into the standard error stream,
+    /// and returns unit.
+    let private logError<'T, 'TError> (message: string) (fn: Async<Result<'T, 'TError>>) : Async<unit> =
         async {
             let! res = fn
 
-            match res with
-            | Ok _ -> return ()
-            | Error err -> eprintfn $"An error happened when processing message {message}: {err}"
+            return
+                match res with
+                | Ok _ -> ()
+                | Error err ->
+                    eprintfn "An error happened when processing message %s: %A" message err
+                    ()
         }
 
     let private runProgram (programFilePath: string) (programInput: string) : Async<Result<Output, ApplicationError>> =
@@ -32,10 +37,13 @@ module Processor =
                 return Error(ProgramExecutionError exn.Message)
         }
 
-    let private handleExecuteProgram (executionId: int) (dataSource: NpgsqlDataSource) =
-        // 1. get the program details from database using the execution id
-        // 2. run the program and collect the result
-        // 3. call the next stage if the execution was a success or a failure
+    /// 1. get the program details from database using the execution id
+    /// 2. run the program and collect the result
+    /// 3. call the next stage if the execution was a success or a failure
+    let private handleExecuteProgram
+        (executionId: int)
+        (dataSource: NpgsqlDataSource)
+        : Async<Result<ProgramOutputDto, ApplicationError>> =
         asyncResult {
             let! dbProgramExecution = Manager.Repositories.ProgramExecutions.getById dataSource executionId
 
@@ -48,68 +56,80 @@ module Processor =
                     )
                 )
 
-            let! programExecutionRes = runProgram programFilePath dbProgramExecution.ProgramInput
+            // let! programExecutionRes = runProgram programFilePath dbProgramExecution.ProgramInput
+
+            // let programOutputDto: Types.ProgramOutputDto =
+            //     { ExecutionId = executionId
+            //       ExecutionSuccess = (programExecutionRes.ExitCode = 0)
+            //       StatusCode = programExecutionRes.ExitCode
+            //       StdOutLog = programExecutionRes.Text
+            //       StdErrLog = programExecutionRes.Error
+            //       CreatedAt = System.DateTime.Now }
+
+            printfn "programFilePath: %s" programFilePath
 
             let programOutputDto: Types.ProgramOutputDto =
                 { ExecutionId = executionId
-                  ExecutionSuccess = (programExecutionRes.ExitCode = 0)
-                  StatusCode = programExecutionRes.ExitCode
-                  StdOutLog = programExecutionRes.Text
-                  StdErrLog = programExecutionRes.Error
+                  ExecutionSuccess = true
+                  StatusCode = 0
+                  StdOutLog = Some "OK"
+                  StdErrLog = None
                   CreatedAt = System.DateTime.Now }
 
-            return programOutputDto
+            return!
+                match programOutputDto.ExecutionSuccess with
+                | true -> Ok programOutputDto
+                | false -> Error(ApplicationError.ProgramExecutionErrorDto programOutputDto)
         }
 
+    /// 1. write the output to the database
+    /// No other side effects for now
     let private handleExecutionSuccess (programOutputDto: Types.ProgramOutputDto) (dataSource: NpgsqlDataSource) =
-        asyncResult {
-            let! _ = Manager.Repositories.ProgramOutputs.create dataSource programOutputDto
-
-            return ()
-        }
+        Manager.Repositories.ProgramOutputs.create dataSource programOutputDto
         |> logError ($"handleExecutionSuccess for execution id {programOutputDto.ExecutionId}")
 
+    /// 1. write the output to the database
+    /// 2. print to the error stream
+    /// No retry for now
     let private handleExecutionFailure (programOutputDto: Types.ProgramOutputDto) (dataSource: NpgsqlDataSource) =
-        asyncResult {
-            let! _ = Manager.Repositories.ProgramOutputs.create dataSource programOutputDto
-
-            return ()
-        }
+        Manager.Repositories.ProgramOutputs.create dataSource programOutputDto
         |> logError ($"handleExecutionFailure for execution id {programOutputDto.ExecutionId}")
 
     let processor =
         MailboxProcessor.Start(fun inbox ->
             let rec loop () =
                 async {
-                    let! msg = inbox.Receive()
+                    try
+                        printfn "Waiting new messages..."
+                        let! msg = inbox.Receive()
 
-                    match msg with
-                    | Message.ExecuteProgram(executionId, dataSource) ->
-                        let! programOutputDtoRes = handleExecuteProgram (executionId) (dataSource)
-
-                        match programOutputDtoRes with
-                        | Ok programOutputDto ->
+                        match msg with
+                        | Message.ExecuteProgram(executionId, dataSource) ->
+                            let! programOutputDtoRes = handleExecuteProgram (executionId) (dataSource)
 
                             let message =
-                                match programOutputDto.StatusCode with
-                                | 0 -> Message.HandleExecutionSuccess(programOutputDto, dataSource)
-                                | _ -> Message.HandleExecutionFailure(programOutputDto, dataSource)
+                                match programOutputDtoRes with
+                                | Ok programOutputDto -> Message.HandleExecutionSuccess(programOutputDto, dataSource)
+                                | Error(ApplicationError.ProgramExecutionErrorDto errOutputDto) ->
+                                    Message.HandleExecutionFailure(errOutputDto, dataSource)
+                                | Error(ApplicationError.Database msg)
+                                | Error(ApplicationError.InvalidProgramExecution msg)
+                                | Error(ApplicationError.ProgramExecutionError msg) ->
+                                    Message.JustPrintErrorMessage(msg)
 
-                            inbox.Post(message) |> ignore
-                        | Error err ->
-                            logError ($"handleExecuteProgram error for execution id {executionId}: {err}.")
-                            |> ignore
-
-                        return! loop ()
-                    | HandleExecutionSuccess(programOutputDto, dataSource) ->
-                        // 1. write the output to the database
-                        do! handleExecutionSuccess (programOutputDto) (dataSource)
-                        return! loop ()
-                    | HandleExecutionFailure(programOutputDto, dataSource) ->
-                        // 1. write the output to the database
-                        // 2. print to the error stream
-                        // No retry for now
-                        do! handleExecutionFailure (programOutputDto) (dataSource)
+                            inbox.Post(message)
+                            return! loop ()
+                        | Message.HandleExecutionSuccess(programOutputDto, dataSource) ->
+                            do! handleExecutionSuccess (programOutputDto) (dataSource)
+                            return! loop ()
+                        | Message.HandleExecutionFailure(programOutputDto, dataSource) ->
+                            do! handleExecutionFailure (programOutputDto) (dataSource)
+                            return! loop ()
+                        | Message.JustPrintErrorMessage(message) ->
+                            do eprintfn "An error happened when processing message %s" message
+                            return! loop ()
+                    with exn ->
+                        eprintfn "Exception while handling new message: %A" exn
                         return! loop ()
                 }
 
