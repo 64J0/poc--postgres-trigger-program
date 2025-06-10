@@ -19,7 +19,8 @@ module Main =
                 | true, programExecutionId ->
                     let message = Message.ExecuteProgram(programExecutionId, dataSource)
                     processor.Post(message)
-                | false, _ -> eprintfn "It was not possible to parse %A to integer" eventArgs.Payload
+                | false, _ ->
+                    eprintfn "It was not possible to parse the Postgres payload %A to integer" eventArgs.Payload
 
         result {
             let! dataSource = Shared.Database.Main.getDatasource ()

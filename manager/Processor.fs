@@ -29,6 +29,7 @@ module Processor =
                     cli {
                         Exec "dotnet"
                         Arguments($"fsi {programFilePath} {programInput}")
+                        CancelAfter 5_000 // TODO https://github.com/CaptnCodr/Fli/issues/79
                     }
                     |> Command.executeAsync
 
@@ -107,17 +108,15 @@ module Processor =
                                 | Error(ApplicationError.ProgramExecutionError msg) ->
                                     Message.JustPrintErrorMessage(msg)
 
-                            inbox.Post(message)
-                            return! loop ()
+                            do inbox.Post(message)
                         | Message.HandleExecutionSuccess(programOutputDto, dataSource) ->
                             do! handleExecutionSuccess (programOutputDto) (dataSource)
-                            return! loop ()
                         | Message.HandleExecutionFailure(programOutputDto, dataSource) ->
                             do! handleExecutionFailure (programOutputDto) (dataSource)
-                            return! loop ()
                         | Message.JustPrintErrorMessage(message) ->
                             do eprintfn "An error happened when processing message %s" message
-                            return! loop ()
+
+                        return! loop ()
                     with exn ->
                         eprintfn "Exception while handling new message: %A" exn
                         return! loop ()
