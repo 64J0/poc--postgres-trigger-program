@@ -30,8 +30,18 @@ services:
     networks:
       - postgres
 
-
-  # TODO manager
+  manager:
+    container_name: manager
+    depends_on:
+      - postgres
+    build:
+      context: .
+      dockerfile: Dockerfile.manager
+    environment:
+      - DB_CONNECTION_STRING=Host=postgres;Username=postgres;Password=changeme;Database=postgres;Connection Pruning Interval=1;Connection Idle Lifetime=2;Enlist=false;No Reset On Close=true
+      - POSTGRES_CHANNEL=program_manager_channel
+    networks:
+      - postgres
 
 networks:
   postgres:
