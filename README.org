@@ -1,10 +1,14 @@
 #+TITLE: [POC] Postgres trigger program
 #+DATE: [2024-12-26 qui]
 
-The idea of this project is to create a multi-service application composed of:
+The idea of this POC project is to create a multi-service application composed
+of:
 
-- 1. An HTTP Rest API to interact with the user,
-- 2. A Postgres database to store the data (application's source of truth) and,
+- 1. An HTTP Rest API to interact with the user to set scripts that are going to
+  be run in the background,
+- 2. A Postgres database to store the data (application's source of truth) that
+  is also responsible for communicating the background application about new
+  script execution requests,
 - 3. A background application leveraging a MailboxProcessor that is notified by
   the database whenever a new ~program_execution~ entity is created and it's
   used to run the specified program, collect its output and update the database
@@ -12,9 +16,9 @@ The idea of this project is to create a multi-service application composed of:
 
 Other than this, when using the API the user will be able to:
 
-- Register new scripts;
-- List scripts that are already registered;
-- Collect the script result.
+- [X] Register new scripts;
+- [X] List scripts that are already registered;
+- [ ] Get the script execution results.
 
 ** How to run
 
